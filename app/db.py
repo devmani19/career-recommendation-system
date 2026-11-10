@@ -33,7 +33,9 @@ MYSQL_DB = os.environ.get("MYSQL_DB", os.environ.get("MYSQL_DATABASE"))
 CLOUD_SQL_CONNECTION_NAME = os.environ.get("CLOUD_SQL_CONNECTION_NAME")
 DATABASE_TYPE = os.environ.get(
     "DATABASE_TYPE",
-    "mysql" if (MYSQL_HOST or CLOUD_SQL_CONNECTION_NAME) and MYSQL_DB else "sqlite",
+    "postgresql" if os.environ.get("DATABASE_URL") else (
+        "mysql" if (MYSQL_HOST or CLOUD_SQL_CONNECTION_NAME) and MYSQL_DB else "sqlite"
+    ),
 ).lower()
 
 
@@ -42,14 +44,13 @@ class DBConnectionWrapper:
     Uniform wrapper around SQLite and MySQL connections.
     Translates '?' placeholders to '%s' for MySQL, and provides dictionary row access.
     """
-    def __init__(self, raw_conn, is_mysql=False):
+    def __init__(self, raw_conn, is_mysql=False, is_postgres=False):
         self.raw_conn = raw_conn
         self.is_mysql = is_mysql
+        self.is_postgres = is_postgres
 
     def _format_query(self, query: str) -> str:
-        if self.is_mysql:
-            # Replace SQLite '?' with MySQL '%s'
-            # (assuming ? are parameter placeholders and not literal inside strings)
+        if self.is_mysql or self.is_postgres:
             return query.replace("?", "%s")
         return query
 
@@ -72,8 +73,25 @@ class DBConnectionWrapper:
 def get_db_connection() -> DBConnectionWrapper:
     """
     Get active database connection.
-    Connects to MySQL directly or through a Cloud SQL Unix socket when configured.
+    Connects to PostgreSQL, MySQL, or local SQLite based on configuration.
     """
+    if DATABASE_TYPE in {"postgres", "postgresql"}:
+        database_url = os.environ.get("DATABASE_URL")
+        if not database_url:
+            raise RuntimeError("DATABASE_URL must be configured when DATABASE_TYPE is postgresql.")
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+
+            conn = psycopg.connect(
+                database_url,
+                row_factory=dict_row,
+                connect_timeout=10,
+            )
+            return DBConnectionWrapper(conn, is_postgres=True)
+        except Exception as exc:
+            raise RuntimeError(f"Unable to connect to the configured PostgreSQL database: {exc}") from exc
+
     if DATABASE_TYPE == "mysql":
         if not MYSQL_DB or not MYSQL_USER or not MYSQL_PASSWORD:
             raise RuntimeError(
@@ -117,9 +135,12 @@ def init_db():
 
     if conn.is_mysql:
         _init_mysql_schema(conn)
+    elif conn.is_postgres:
+        _init_postgres_schema(conn)
     else:
         _init_sqlite_schema(conn)
 
+    _ensure_admin_user(conn)
     conn.close()
 
 
@@ -311,41 +332,6 @@ def _init_sqlite_schema(conn: DBConnectionWrapper):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_pwd_resets_token ON password_resets(token_hash)")
     conn.commit()
 
-    # Seed admin user if not exists
-    cursor = conn.execute("SELECT id, user_id FROM users WHERE username = ?", ("admin",))
-    admin_row = cursor.fetchone()
-    if not admin_row:
-        conn.execute(
-            """
-            INSERT INTO users (
-                user_id, username, email, full_name, password_hash,
-                email_verified, email_verified_at, account_status
-            ) VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 'active')
-            """,
-            (
-                "USR-ADMIN001",
-                "admin",
-                "admin@careerai.com",
-                "CareerAI Administrator",
-                hash_password("admin123"),
-            ),
-        )
-        conn.commit()
-    else:
-        # Upgrade admin fields if user_id was NULL
-        if dict(admin_row).get("user_id") is None:
-            conn.execute(
-                """
-                UPDATE users SET 
-                    user_id = 'USR-ADMIN001',
-                    full_name = 'CareerAI Administrator',
-                    email_verified = 1,
-                    account_status = 'active'
-                WHERE username = 'admin'
-                """
-            )
-            conn.commit()
-
     # Auto-seed question bank if empty
     q_count = conn.execute("SELECT count(*) FROM assessment_questions").fetchone()[0]
     if q_count == 0:
@@ -375,6 +361,47 @@ def _init_sqlite_schema(conn: DBConnectionWrapper):
                     ),
                 )
             conn.commit()
+
+
+def _ensure_admin_user(conn: DBConnectionWrapper):
+    """Create the initial admin account only when an explicit password is configured."""
+    admin = conn.execute(
+        "SELECT id, user_id FROM users WHERE username = ?", ("admin",)
+    ).fetchone()
+    if not admin:
+        admin_password = os.environ.get("ADMIN_PASSWORD")
+        if not admin_password:
+            return
+        conn.execute(
+            """
+            INSERT INTO users (
+                user_id, username, email, full_name, password_hash,
+                email_verified, email_verified_at, account_status
+            ) VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 'active')
+            """,
+            (
+                "USR-ADMIN001",
+                "admin",
+                "admin@careerai.com",
+                "CareerAI Administrator",
+                hash_password(admin_password),
+            ),
+        )
+        conn.commit()
+        return
+
+    if dict(admin).get("user_id") is None:
+        conn.execute(
+            """
+            UPDATE users SET
+                user_id = 'USR-ADMIN001',
+                full_name = 'CareerAI Administrator',
+                email_verified = 1,
+                account_status = 'active'
+            WHERE username = 'admin'
+            """
+        )
+        conn.commit()
 
 
 def _init_mysql_schema(conn: DBConnectionWrapper):
@@ -546,6 +573,186 @@ def _init_mysql_schema(conn: DBConnectionWrapper):
     _seed_mysql_assessment_questions(conn)
 
 
+def _init_postgres_schema(conn: DBConnectionWrapper):
+    """Create the application schema in PostgreSQL."""
+    schema_statements = (
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id BIGSERIAL PRIMARY KEY,
+            user_id VARCHAR(64) UNIQUE,
+            username VARCHAR(150) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            full_name VARCHAR(255) DEFAULT '',
+            password_hash VARCHAR(255) NOT NULL,
+            email_verified SMALLINT DEFAULT 0,
+            email_verified_at TIMESTAMP,
+            account_status VARCHAR(32) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login_at TIMESTAMP,
+            failed_login_attempts INTEGER DEFAULT 0,
+            lockout_until TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS recommendations (
+            id BIGSERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            candidate_name VARCHAR(255) NOT NULL,
+            certificate_name TEXT,
+            score TEXT,
+            result_json TEXT,
+            ranking_method VARCHAR(64) DEFAULT 'weighted_fallback',
+            model_version VARCHAR(32) DEFAULT '1.0.0',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS assessment_questions (
+            id VARCHAR(64) PRIMARY KEY,
+            category VARCHAR(64) NOT NULL,
+            question_type VARCHAR(32) NOT NULL,
+            subtopic VARCHAR(128) NOT NULL,
+            difficulty VARCHAR(32) NOT NULL,
+            question_text TEXT NOT NULL,
+            code_snippet TEXT,
+            options_json TEXT,
+            correct_answer TEXT NOT NULL,
+            explanation TEXT,
+            test_cases_json TEXT,
+            reference_solution TEXT,
+            marks INTEGER DEFAULT 1,
+            target_roles_json TEXT,
+            version VARCHAR(32) DEFAULT '1.0.0',
+            validation_status VARCHAR(32) DEFAULT 'validated',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS assessment_sessions (
+            id VARCHAR(64) PRIMARY KEY,
+            user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            assessment_type VARCHAR(64) NOT NULL,
+            programming_language VARCHAR(64),
+            target_role VARCHAR(128),
+            duration_minutes INTEGER NOT NULL,
+            status VARCHAR(32) DEFAULT 'in_progress',
+            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            total_score DOUBLE PRECISION DEFAULT 0.0,
+            max_score DOUBLE PRECISION DEFAULT 0.0,
+            percentage DOUBLE PRECISION DEFAULT 0.0,
+            readiness_level VARCHAR(64),
+            topic_breakdown_json TEXT,
+            skill_gap_analysis_json TEXT
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS assessment_session_questions (
+            id BIGSERIAL PRIMARY KEY,
+            session_id VARCHAR(64) NOT NULL REFERENCES assessment_sessions(id) ON DELETE CASCADE,
+            question_id VARCHAR(64) NOT NULL REFERENCES assessment_questions(id) ON DELETE CASCADE,
+            order_index INTEGER NOT NULL,
+            shuffled_options_json TEXT
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS assessment_submissions (
+            id BIGSERIAL PRIMARY KEY,
+            session_id VARCHAR(64) NOT NULL REFERENCES assessment_sessions(id) ON DELETE CASCADE,
+            question_id VARCHAR(64) NOT NULL REFERENCES assessment_questions(id) ON DELETE CASCADE,
+            selected_option TEXT,
+            code_submission TEXT,
+            is_correct SMALLINT,
+            score_awarded DOUBLE PRECISION DEFAULT 0.0,
+            max_score DOUBLE PRECISION DEFAULT 0.0,
+            test_cases_passed INTEGER DEFAULT 0,
+            test_cases_total INTEGER DEFAULT 0,
+            execution_output_json TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(session_id, question_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS otp_verifications (
+            id BIGSERIAL PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            full_name VARCHAR(255) NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            otp_hash VARCHAR(255) NOT NULL,
+            attempts INTEGER DEFAULT 0,
+            resend_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            last_sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_consumed SMALLINT DEFAULT 0
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id BIGSERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            email VARCHAR(255) NOT NULL,
+            token_hash VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            is_used SMALLINT DEFAULT 0
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
+        "CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_verifications(email)",
+        "CREATE INDEX IF NOT EXISTS idx_pwd_resets_token ON password_resets(token_hash)",
+    )
+    for statement in schema_statements:
+        conn.execute(statement)
+    conn.commit()
+    _seed_postgres_assessment_questions(conn)
+
+
+def _seed_postgres_assessment_questions(conn: DBConnectionWrapper):
+    """Seed the assessment question bank in a new PostgreSQL database."""
+    count = conn.execute(
+        "SELECT COUNT(*) AS question_count FROM assessment_questions"
+    ).fetchone()["question_count"]
+    if count:
+        return
+
+    import json
+
+    json_path = BASE_DIR / "data" / "assessment_questions.json"
+    if not json_path.exists():
+        raise FileNotFoundError(f"Assessment question bank not found: {json_path}")
+
+    with open(json_path, "r", encoding="utf-8") as questions_file:
+        questions = json.load(questions_file)
+
+    for question in questions:
+        conn.execute(
+            """
+            INSERT INTO assessment_questions (
+                id, category, question_type, subtopic, difficulty,
+                question_text, code_snippet, options_json, correct_answer,
+                explanation, test_cases_json, reference_solution, marks,
+                target_roles_json, version, validation_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            (
+                question["id"], question["category"], question["question_type"],
+                question["subtopic"], question["difficulty"], question["question_text"],
+                question.get("code_snippet") or question.get("starter_code") or "",
+                json.dumps(question.get("options", [])),
+                question.get("correct_answer", ""), question.get("explanation", ""),
+                json.dumps(question.get("test_cases", [])),
+                question.get("reference_solution", ""), question.get("marks", 1),
+                json.dumps(question.get("target_roles", [])),
+                question.get("version", "1.0.0"),
+                question.get("validation_status", "validated"),
+            ),
+        )
+    conn.commit()
+
+
 def _seed_mysql_assessment_questions(conn: DBConnectionWrapper):
     """Seed the assessment question bank in a new MySQL deployment."""
     count = conn.execute(
@@ -613,11 +820,11 @@ def create_user(
             user_id, username, email, full_name, password_hash,
             email_verified, email_verified_at, account_status
         ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-        """,
+        """ + (" RETURNING id" if conn.is_postgres else ""),
         (user_id, username, email.lower().strip(), full_name.strip(), password_hash, email_verified, account_status),
     )
     conn.commit()
-    new_id = cursor.lastrowid
+    new_id = cursor.fetchone()["id"] if conn.is_postgres else cursor.lastrowid
     conn.close()
     return new_id
 
@@ -976,7 +1183,7 @@ def activate_user_from_otp(challenge: Dict) -> Dict:
                 user_id, username, email, full_name, password_hash,
                 email_verified, email_verified_at, account_status, created_at
             ) VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 'active', CURRENT_TIMESTAMP)
-            """,
+            """ + (" RETURNING id" if conn.is_postgres else ""),
             (user_id, username, email, full_name, password_hash),
         )
 
@@ -984,7 +1191,7 @@ def activate_user_from_otp(challenge: Dict) -> Dict:
         conn.execute("UPDATE otp_verifications SET is_consumed = 1 WHERE id = ?", (challenge_id,))
         conn.commit()
 
-        user_db_id = cursor.lastrowid
+        user_db_id = cursor.fetchone()["id"] if conn.is_postgres else cursor.lastrowid
         cursor_u = conn.execute("SELECT * FROM users WHERE id = ?", (user_db_id,))
         created_user = dict(cursor_u.fetchone())
         conn.close()

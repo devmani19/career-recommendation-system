@@ -1,5 +1,8 @@
 import os
 import smtplib
+import json
+import urllib.error
+import urllib.request
 from email.message import EmailMessage
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
@@ -46,6 +49,9 @@ def get_smtp_config():
         "from_name": os.environ.get("SMTP_FROM_NAME", "Career Recommendation System Team"),
         "base_url": os.environ.get("APP_BASE_URL", "http://localhost:5000").rstrip("/"),
         "suppress_send": os.environ.get("MAIL_SUPPRESS_SEND", "false").lower() in ("1", "true", "yes"),
+        "provider": os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower(),
+        "api_key": os.environ.get("EMAIL_API_KEY", "").strip(),
+        "api_from": os.environ.get("EMAIL_FROM", "").strip(),
     }
 
 
@@ -77,6 +83,71 @@ def send_email(to_email: str, subject: str, text_content: str, html_content: Opt
             "headers": dict(msg.items()),
         })
         return True
+
+    if config["provider"] in {"resend", "brevo"}:
+        if not config["api_key"] or not config["api_from"]:
+            raise EmailDeliveryError(
+                f"{config['provider'].title()} email delivery requires EMAIL_API_KEY and EMAIL_FROM."
+            )
+        if config["provider"] == "resend":
+            api_url = "https://api.resend.com/emails"
+            payload_data = {
+                "from": config["api_from"],
+                "to": [to_email],
+                "subject": subject,
+                "text": text_content,
+                "html": html_content,
+            }
+            headers = {"Authorization": f"Bearer {config['api_key']}"}
+        else:
+            api_url = "https://api.brevo.com/v3/smtp/email"
+            payload_data = {
+                "sender": {
+                    "name": config["from_name"],
+                    "email": config["api_from"],
+                },
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "textContent": text_content,
+                "htmlContent": html_content,
+            }
+            headers = {"api-key": config["api_key"]}
+        payload = json.dumps(payload_data).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(
+            api_url,
+            data=payload,
+            headers=headers,
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                if response.status < 200 or response.status >= 300:
+                    raise EmailDeliveryError(
+                        f"{config['provider'].title()} rejected the email with HTTP {response.status}."
+                    )
+        except urllib.error.HTTPError as exc:
+            raise EmailDeliveryError(
+                f"{config['provider'].title()} rejected the email with HTTP {exc.code}."
+            ) from exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise EmailDeliveryError(
+                f"Unable to reach the {config['provider'].title()} email API: {exc}"
+            ) from exc
+        _outbox.append({
+            "to": to_email,
+            "from": config["api_from"],
+            "subject": subject,
+            "text": text_content,
+            "html": html_content,
+            "headers": dict(msg.items()),
+        })
+        return True
+
+    if config["provider"] != "smtp":
+        raise EmailDeliveryError(
+            f"Unsupported EMAIL_PROVIDER '{config['provider']}'. Use 'smtp', 'resend', or 'brevo'."
+        )
 
     is_gmail_smtp = config["host"].lower() == "smtp.gmail.com"
     if is_gmail_smtp and (not config["user"] or not config["password"]):

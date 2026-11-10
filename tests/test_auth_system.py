@@ -117,6 +117,7 @@ def live_smtp_server():
 @pytest.fixture
 def app():
     """Create Flask application configured for testing."""
+    os.environ["ADMIN_PASSWORD"] = "admin123"
     os.environ["SMTP_HOST"] = "127.0.0.1"
     os.environ["SMTP_PORT"] = "9925"
     os.environ["SMTP_USE_TLS"] = "false"

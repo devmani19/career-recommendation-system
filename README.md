@@ -1,92 +1,93 @@
-# career-recommendation-system
-An AI-powered career guidance platform for resume analysis, skill-gap assessment, career-readiness evaluation, and personalized career recommendations
+# Career Recommendation System
 
-## Deploy to Google Cloud Run with Cloud SQL
+An AI-powered career guidance platform for resume analysis, skill-gap assessment,
+career-readiness evaluation, and personalized career recommendations.
 
-The project includes a Dockerfile for Cloud Run. Use Cloud SQL for MySQL in production;
-Cloud Run's local filesystem is temporary and SQLite data will not persist across instances.
+## Free demo hosting: Render + Neon
 
-### 1. Create Google Cloud resources
+This setup keeps the database outside the web container, so app restarts or redeploys
+do not erase registered users or assessment results. Free plans have quotas and can
+change; export database backups regularly. Render's free web service can sleep while
+idle, so the first visit after inactivity may take time.
 
-In the Google Cloud Console:
+### 1. Create a persistent PostgreSQL database
 
-1. Create or select a project and enable billing.
-2. Enable Cloud Run, Cloud Build, Artifact Registry, Cloud SQL Admin, and Secret Manager APIs.
-3. Create a Cloud SQL for MySQL 8 instance in the same region you plan to use for Cloud Run.
-4. Create a database named `career_app` and a dedicated database user (for example `careerai_app`).
-   Save the user's password securely.
-   Grant that user permission to create and update tables in this database, for example by
-   connecting as the database administrator and running
-   `GRANT ALL PRIVILEGES ON career_app.* TO 'careerai_app'@'%'`.
-5. Create a runtime service account for the Cloud Run service and grant it **Cloud SQL Client**
-   and **Secret Manager Secret Accessor** roles.
-6. Create these Secret Manager secrets and add their values:
-   - `careerai-secret-key`: a long random value used as the Flask session key.
-   - `careerai-auth-pepper`: a different long random value used for OTP/reset-token hashing.
-   - `careerai-db-password`: the Cloud SQL user's password.
-   - `careerai-smtp-password`: the sender Gmail's Google App Password.
+1. Create a free Neon account and a PostgreSQL project.
+2. Copy the **pooled** connection string from the Neon dashboard. It should include
+   SSL settings such as `sslmode=require`.
+3. Keep the connection string private; add it to the app host as `DATABASE_URL`.
 
-Generate random application secrets locally with:
+The app creates its tables and assessment question bank on first startup when
+`DATABASE_TYPE=postgresql`.
+
+### 2. Create the web service
+
+1. Create a Render account and choose **New → Web Service**.
+2. Connect `devmani19/career-recommendation-system`, select the `main` branch, and
+   choose the repository's Dockerfile.
+3. Select the free instance type. The service may sleep when idle and has limited
+   CPU/RAM; model-heavy requests may exceed the free instance's resources.
+4. Add the environment variables below in Render's service settings. Add secret values
+   there, not to GitHub.
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_TYPE` | `postgresql` |
+| `DATABASE_URL` | Neon pooled PostgreSQL connection string |
+| `SECRET_KEY` | Long random secret used to sign Flask sessions |
+| `AUTH_SECRET_PEPPER` | A different long random secret for OTP/reset-token hashes |
+| `ADMIN_PASSWORD` | Strong admin password; omit to disable automatic admin creation |
+| `EMAIL_PROVIDER` | `brevo` (HTTPS API, avoids SMTP port restrictions) |
+| `EMAIL_API_KEY` | Brevo API key |
+| `EMAIL_FROM` | Verified sender email address in Brevo |
+| `SMTP_FROM_NAME` | `Career Recommendation System Team` |
+| `MAIL_SUPPRESS_SEND` | `false` |
+
+Generate each application secret locally in PowerShell:
 
 ```powershell
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Run it separately for each application secret. Do not commit the generated values.
+Generate two different values. Store them in Render's environment settings and keep
+them stable across deploys. Do not commit them.
 
-### 2. Deploy from this GitHub repository
+### 3. Configure OTP email
 
-In the Google Cloud Console, open **Cloud Run → Create service → Continuously deploy from a
-repository**, connect the GitHub repository, and select the `main` branch. Choose Dockerfile
-builds and the same region as Cloud SQL.
+Render free services may not be able to connect to external SMTP servers. Use Brevo's
+HTTPS transactional email API instead:
 
-Configure the service:
+1. Create a Brevo account and an API key.
+2. Register and verify the sender email address with Brevo.
+3. Set `EMAIL_PROVIDER=brevo`, `EMAIL_API_KEY`, and `EMAIL_FROM` in Render.
+4. Register using an email address you can access and check Inbox and Spam/Junk.
 
-- Allow unauthenticated invocations if the website should be public.
-- Use the runtime service account created above.
-- Attach the Cloud SQL instance in the service's **Connections** settings.
-- Start with 2 CPUs and 4 GiB memory; the resume/NLP/model dependencies are resource-intensive.
-- Set minimum instances to 0 to reduce idle cost.
-- Cloud SQL has ongoing charges even when the app is idle; review Google Cloud pricing and set a
-  billing budget alert before creating the instance.
+Brevo warns that free email domains such as Gmail cannot be authenticated with DKIM/
+DMARC in the same way as a custom domain. Delivery may be less reliable or be classified
+as spam. For reliable production email, use a domain you control and authenticate it.
+Never ask registrants for their Gmail passwords or App Passwords.
 
-Set these environment variables on the Cloud Run service:
+### 4. Protect and back up user data
 
-| Name | Value |
-| --- | --- |
-| `DATABASE_TYPE` | `mysql` |
-| `CLOUD_SQL_CONNECTION_NAME` | Cloud SQL instance connection name: `project:region:instance` |
-| `MYSQL_DB` | `career_app` |
-| `MYSQL_USER` | The dedicated Cloud SQL database user |
-| `SMTP_HOST` | `smtp.gmail.com` |
-| `SMTP_PORT` | `587` |
-| `SMTP_USE_TLS` | `true` |
-| `SMTP_USE_SSL` | `false` |
-| `SMTP_USER` | The app owner's sender Gmail address |
-| `SMTP_FROM_EMAIL` | The same sender Gmail address |
-| `SMTP_FROM_NAME` | `Career Recommendation System Team` |
-| `MAIL_SUPPRESS_SEND` | `false` |
+- User accounts and assessment records live in Neon, not in the container filesystem.
+- Check Neon plan limits and export a database backup regularly; a free database is not
+  a substitute for backups or an availability guarantee.
+- Uploaded files are stored on the app container and can disappear on redeploy/restart.
+  Do not treat local uploads as durable. Add object storage before relying on long-term
+  resume-file retention.
+- Set a strong, unique admin password before allowing public use. Never deploy with the
+  default demo admin credentials. The app creates its initial admin account only if
+  `ADMIN_PASSWORD` is configured; configure it before the first database startup if needed.
+- Keep `.env`, API keys, database URLs, and generated secrets out of GitHub.
 
-Map the following environment variables to the corresponding Secret Manager secrets:
+## Local development
 
-| Environment variable | Secret |
-| --- | --- |
-| `SECRET_KEY` | `careerai-secret-key` |
-| `AUTH_SECRET_PEPPER` | `careerai-auth-pepper` |
-| `MYSQL_PASSWORD` | `careerai-db-password` |
-| `SMTP_PASSWORD` | `careerai-smtp-password` |
+Install dependencies and run the test suite:
 
-Deploy the service. On startup, the app creates the MySQL schema and seeds the assessment
-question bank. Users can then register through the public service URL. The sender Gmail is
-configured once by the app owner; registrants only enter their own email address.
+```powershell
+python -m pip install -r requirements.txt
+pytest -q
+```
 
-### 3. Verify delivery and data persistence
-
-Register with an email address you can access, then check its inbox and spam folder for the OTP.
-Create a test account, deploy a new revision, and confirm the account can still log in; this
-checks that the service is using Cloud SQL rather than local SQLite.
-
-Cloud Run may not retain uploaded files after an instance stops. The app processes resume
-uploads during requests; use Cloud Storage if uploaded files need durable retention.
-
-Never commit `.env`, database passwords, SMTP credentials, or generated application secrets.
+To use PostgreSQL locally, set `DATABASE_TYPE=postgresql` and `DATABASE_URL`. Otherwise
+the app uses the local SQLite database.
