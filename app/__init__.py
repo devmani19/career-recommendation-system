@@ -8,6 +8,25 @@ from .db import init_db
 
 
 def create_app():
+    if os.environ.get("K_SERVICE"):
+        required_settings = (
+            "SECRET_KEY",
+            "AUTH_SECRET_PEPPER",
+            "DATABASE_TYPE",
+            "CLOUD_SQL_CONNECTION_NAME",
+            "MYSQL_DB",
+            "MYSQL_USER",
+            "MYSQL_PASSWORD",
+            "SMTP_USER",
+            "SMTP_PASSWORD",
+            "SMTP_FROM_EMAIL",
+        )
+        missing_settings = [name for name in required_settings if not os.environ.get(name)]
+        if missing_settings:
+            raise RuntimeError(
+                "Missing required Cloud Run configuration: " + ", ".join(missing_settings)
+            )
+
     app = Flask(__name__, template_folder="../templates", static_folder="../static")
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or os.urandom(32)
     app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "..", "uploads")

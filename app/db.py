@@ -30,7 +30,11 @@ MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
 MYSQL_USER = os.environ.get("MYSQL_USER")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
 MYSQL_DB = os.environ.get("MYSQL_DB", os.environ.get("MYSQL_DATABASE"))
-DATABASE_TYPE = os.environ.get("DATABASE_TYPE", "mysql" if MYSQL_HOST and MYSQL_DB else "sqlite").lower()
+CLOUD_SQL_CONNECTION_NAME = os.environ.get("CLOUD_SQL_CONNECTION_NAME")
+DATABASE_TYPE = os.environ.get(
+    "DATABASE_TYPE",
+    "mysql" if (MYSQL_HOST or CLOUD_SQL_CONNECTION_NAME) and MYSQL_DB else "sqlite",
+).lower()
 
 
 class DBConnectionWrapper:
@@ -68,29 +72,37 @@ class DBConnectionWrapper:
 def get_db_connection() -> DBConnectionWrapper:
     """
     Get active database connection.
-    Connects to MySQL if DATABASE_TYPE is 'mysql' and credentials exist;
-    otherwise falls back to SQLite.
+    Connects to MySQL directly or through a Cloud SQL Unix socket when configured.
     """
-    global DATABASE_TYPE
-    if DATABASE_TYPE == "mysql" and MYSQL_HOST and MYSQL_DB:
+    if DATABASE_TYPE == "mysql":
+        if not MYSQL_DB or not MYSQL_USER or not MYSQL_PASSWORD:
+            raise RuntimeError(
+                "MySQL is selected but MYSQL_DB, MYSQL_USER, and MYSQL_PASSWORD must be configured."
+            )
         try:
             import pymysql
             import pymysql.cursors
 
-            conn = pymysql.connect(
-                host=MYSQL_HOST,
-                port=MYSQL_PORT,
-                user=MYSQL_USER or "root",
-                password=MYSQL_PASSWORD or "",
-                database=MYSQL_DB,
-                charset="utf8mb4",
-                cursorclass=pymysql.cursors.DictCursor,
-                autocommit=False,
-            )
+            connection_options = {
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "database": MYSQL_DB,
+                "charset": "utf8mb4",
+                "cursorclass": pymysql.cursors.DictCursor,
+                "autocommit": False,
+                "connect_timeout": 10,
+            }
+            if CLOUD_SQL_CONNECTION_NAME:
+                connection_options["unix_socket"] = f"/cloudsql/{CLOUD_SQL_CONNECTION_NAME}"
+            else:
+                if not MYSQL_HOST:
+                    raise RuntimeError("MYSQL_HOST is required when Cloud SQL is not configured.")
+                connection_options["host"] = MYSQL_HOST
+                connection_options["port"] = MYSQL_PORT
+            conn = pymysql.connect(**connection_options)
             return DBConnectionWrapper(conn, is_mysql=True)
-        except Exception:
-            # Fall back to SQLite if MySQL connection fails
-            pass
+        except Exception as exc:
+            raise RuntimeError(f"Unable to connect to the configured MySQL database: {exc}") from exc
 
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     sqlite_conn = sqlite3.connect(str(DB_PATH))
@@ -530,6 +542,50 @@ def _init_mysql_schema(conn: DBConnectionWrapper):
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """
     )
+    conn.commit()
+    _seed_mysql_assessment_questions(conn)
+
+
+def _seed_mysql_assessment_questions(conn: DBConnectionWrapper):
+    """Seed the assessment question bank in a new MySQL deployment."""
+    count = conn.execute(
+        "SELECT COUNT(*) AS question_count FROM assessment_questions"
+    ).fetchone()["question_count"]
+    if count:
+        return
+
+    import json
+
+    json_path = BASE_DIR / "data" / "assessment_questions.json"
+    if not json_path.exists():
+        raise FileNotFoundError(f"Assessment question bank not found: {json_path}")
+
+    with open(json_path, "r", encoding="utf-8") as questions_file:
+        questions = json.load(questions_file)
+
+    for question in questions:
+        conn.execute(
+            """
+            INSERT IGNORE INTO assessment_questions (
+                id, category, question_type, subtopic, difficulty,
+                question_text, code_snippet, options_json, correct_answer,
+                explanation, test_cases_json, reference_solution, marks,
+                target_roles_json, version, validation_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                question["id"], question["category"], question["question_type"],
+                question["subtopic"], question["difficulty"], question["question_text"],
+                question.get("code_snippet") or question.get("starter_code") or "",
+                json.dumps(question.get("options", [])),
+                question.get("correct_answer", ""), question.get("explanation", ""),
+                json.dumps(question.get("test_cases", [])),
+                question.get("reference_solution", ""), question.get("marks", 1),
+                json.dumps(question.get("target_roles", [])),
+                question.get("version", "1.0.0"),
+                question.get("validation_status", "validated"),
+            ),
+        )
     conn.commit()
 
 
