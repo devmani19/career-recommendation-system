@@ -1,0 +1,12 @@
+Flask==3.0.3
+pypdf==5.1.0
+spacy>=3.8,<4
+scikit-learn>=1.4.0
+pandas>=2.2.0
+numpy>=1.24.0
+xgboost>=2.0.0
+sentence-transformers>=3.0.0
+pytest>=8.0.0
+bcrypt>=4.0.0
+pymysql>=1.1.0
+python-dotenv>=1.0.0

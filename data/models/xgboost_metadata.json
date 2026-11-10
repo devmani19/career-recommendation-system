@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "model_type": "XGBClassifier",
+  "trained_at_utc": "2026-10-09T07:13:18.656296+00:00",
+  "n_samples": 1140,
+  "n_train": 912,
+  "n_val": 228,
+  "feature_names": [
+    "semantic_similarity",
+    "skill_coverage",
+    "qualification_fit",
+    "experience_fit",
+    "credential_confidence"
+  ],
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "random_state": 42
+  },
+  "validation_metrics": {
+    "accuracy": 0.943,
+    "f1_score": 0.7719,
+    "roc_auc": 0.9364,
+    "log_loss": 0.2044
+  }
+}

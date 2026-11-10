@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/vendor/react.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vendor/react-dom.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth_react.js') }}" defer></script>
+</head>
+<body class="site-body auth-body">
+    <div class="auth-shell">
+        <a class="auth-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+            <span class="brand-mark" aria-hidden="true">C</span>
+            CareerAI
+        </a>
+
+        <div class="auth-layout">
+            <!-- Left: context -->
+            <section class="auth-context" aria-label="About CareerAI">
+                <p class="eyebrow">A More Clear-Eyed Next Step</p>
+                <h1>Start with what you already know.</h1>
+                <p>
+                    Build a profile, review your current skills, and find practical areas
+                    to grow toward a career role that fits your background.
+                </p>
+                <div class="auth-context-rule"></div>
+                <div class="auth-graphic-wrap">
+                    <img src="{{ url_for('static', filename='img/auth-pattern.svg') }}" alt="Career progress trajectory" class="auth-vector-art">
+                </div>
+                <span>Your Profile Is Ready When You Are</span>
+            </section>
+
+            <!-- Right: card container -->
+            <section class="auth-card" aria-labelledby="register-heading">
+                <!-- React Mount Container -->
+                <div id="react-auth-root" data-initial-view="register" style="display: none;"></div>
+
+                <!-- Static HTML Fallback (shown when JS is disabled or before React mounts) -->
+                <div id="static-auth-card">
+                    <p class="eyebrow">Get Started</p>
+                    <h2 id="register-heading">Create your account</h2>
+                    <p class="auth-description">Set up your account to begin a career analysis.</p>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert {{ category }}" role="alert">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="post" action="{{ url_for('auth.register') }}" class="auth-form" novalidate>
+                        <label for="register-full-name">Full Name</label>
+                        <input
+                            id="register-full-name"
+                            type="text"
+                            name="full_name"
+                            autocomplete="name"
+                            placeholder="Jane Doe"
+                            value="{{ full_name if full_name is defined else '' }}"
+                            required
+                            autofocus
+                        >
+
+                        <label for="register-email">Email Address (Login ID)</label>
+                        <input
+                            id="register-email"
+                            type="email"
+                            name="email"
+                            autocomplete="email"
+                            placeholder="you@example.com"
+                            value="{{ email if email is defined else '' }}"
+                            required
+                        >
+
+                        <label for="register-password">Password</label>
+                        <input
+                            id="register-password"
+                            type="password"
+                            name="password"
+                            autocomplete="new-password"
+                            placeholder="Create a strong password (min 8 chars)"
+                            required
+                        >
+
+                        <label for="register-confirm-password">Confirm Password</label>
+                        <input
+                            id="register-confirm-password"
+                            type="password"
+                            name="confirm_password"
+                            autocomplete="new-password"
+                            placeholder="Re-enter your password"
+                            required
+                        >
+
+                        <button type="submit">
+                            <span>Create account</span>
+                            <span aria-hidden="true">→</span>
+                        </button>
+                    </form>
+
+                    <p class="auth-link">
+                        Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <a class="auth-home-link" href="{{ url_for('main.home') }}">← Back to home</a>
+    </div>
+</body>
+</html>

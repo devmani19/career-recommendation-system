@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/vendor/react.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vendor/react-dom.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth_react.js') }}" defer></script>
+</head>
+<body class="site-body auth-body">
+    <div class="auth-shell">
+        <a class="auth-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+            <span class="brand-mark" aria-hidden="true">C</span>
+            CareerAI
+        </a>
+
+        <div class="auth-layout">
+            <!-- Left: context -->
+            <section class="auth-context" aria-label="Security Verification">
+                <p class="eyebrow">Identity &amp; Security</p>
+                <h1>Protecting your career data.</h1>
+                <p>
+                    Every new account requires email verification. We never share your
+                    credentials or store plaintext passwords.
+                </p>
+                <div class="auth-context-rule"></div>
+                <div class="auth-graphic-wrap">
+                    <img src="{{ url_for('static', filename='img/auth-pattern.svg') }}" alt="Verification pattern" class="auth-vector-art">
+                </div>
+                <span>Encrypted · Verified · Confidential</span>
+            </section>
+
+            <!-- Right: card container -->
+            <section class="auth-card" aria-labelledby="verify-heading">
+                <!-- React Mount Container -->
+                <div id="react-auth-root" 
+                     data-initial-view="verify-otp" 
+                     data-initial-email="{{ email if email is defined else '' }}" 
+                     style="display: none;"></div>
+
+                <!-- Static HTML Fallback -->
+                <div id="static-auth-card">
+                    <p class="eyebrow">Security Check</p>
+                    <h2 id="verify-heading">Verify your email</h2>
+                    <p class="auth-description">
+                        Enter the 6-digit verification code sent to <strong>{{ email if email is defined else 'your registered email' }}</strong>.
+                    </p>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert {{ category }}" role="alert">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="post" action="{{ url_for('auth.verify_otp') }}" class="auth-form" novalidate>
+                        <input type="hidden" name="email" value="{{ email if email is defined else '' }}">
+
+                        <label for="otp-code">6-Digit Verification Code</label>
+                        <input
+                            id="otp-code"
+                            type="text"
+                            name="otp"
+                            pattern="[0-9]{6}"
+                            maxlength="6"
+                            placeholder="123456"
+                            style="font-size: 1.25rem; font-weight: 700; letter-spacing: 4px; text-align: center;"
+                            required
+                            autofocus
+                        >
+
+                        <div style="font-size: 0.72rem; color: var(--muted); margin: 6px 0 12px;">
+                            Verification codes are valid for 5 minutes (max 5 attempts).
+                        </div>
+
+                        <button type="submit">
+                            <span>Verify &amp; Activate Account</span>
+                            <span aria-hidden="true">✓</span>
+                        </button>
+                    </form>
+
+                    <p class="auth-link">
+                        Wrong email address? <a href="{{ url_for('auth.register') }}">Register again</a>
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <a class="auth-home-link" href="{{ url_for('main.home') }}">← Back to home</a>
+    </div>
+</body>
+</html>

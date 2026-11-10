@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Readiness Assessment — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+
+        <!-- ── Header ──────────────────────────────────────────────── -->
+        <header class="dashboard-header">
+            <div style="display: flex; align-items: center;">
+                <a class="dashboard-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <nav class="dashboard-nav-links" aria-label="Main navigation">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link-item">Career Profile &amp; Match</a>
+                    <a href="{{ url_for('assessment.assessment_home') }}" class="nav-link-item active">Readiness Assessment</a>
+                </nav>
+            </div>
+            <div class="header-account">
+                <span class="account-avatar" aria-hidden="true">{{ username[:1] | upper }}</span>
+                <span class="account-name">{{ username }}</span>
+                <a href="{{ url_for('main.logout') }}" class="header-logout">Log out</a>
+            </div>
+        </header>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <main class="dashboard-main">
+
+            <!-- Page intro -->
+            <section class="page-intro">
+                <div>
+                    <p class="eyebrow">Campus &amp; Industry Placement Preparation</p>
+                    <h1>Career Readiness Assessment</h1>
+                    <p class="intro-copy">
+                        Evaluate your aptitude and programming skills, identify your weaknesses, and discover the areas you need to improve for your target career.
+                    </p>
+                </div>
+                <div class="intro-note">
+                    <span class="note-dot" aria-hidden="true"></span>
+                    Targeting: <strong>{{ target_role }}</strong>
+                </div>
+            </section>
+
+            <!-- Flash alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}" role="alert" style="margin-bottom: 20px;">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- ── Assessment Cards Grid (4 Cards) ──────────────────── -->
+            <section aria-labelledby="assessment-options-heading">
+                <div class="section-title-row" style="margin-bottom: 12px;">
+                    <h2 id="assessment-options-heading" style="font-size: 1.25rem; font-weight: 700;">Select Assessment Type</h2>
+                    <span class="role-label">Dynamic Question Bank · Over 250 Questions</span>
+                </div>
+
+                <div class="assessment-cards-grid">
+
+                    <!-- Card 1: Aptitude Assessment -->
+                    <article class="assessment-card">
+                        <div>
+                            <span class="assessment-card-badge">Aptitude</span>
+                            <div class="assessment-card-header">
+                                <span class="eyebrow" style="margin-bottom: 4px;">General Placement</span>
+                                <h3>Aptitude Assessment</h3>
+                            </div>
+                            <p class="assessment-card-desc">
+                                Evaluates numerical ability, logical deductions, data interpretation, verbal reasoning, and problem-solving patterns.
+                            </p>
+                            <ul class="assessment-meta-list">
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>20 questions</strong> per attempt</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Suggested duration: <strong>30 minutes</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⚙</span>
+                                    <span>Topics: Quant, Logical, Verbal, DI, Analytical, Patterns</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">📊</span>
+                                    <span>Difficulty: Easy, Medium, Hard (Balanced)</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('assessment.instructions', assessment_type='aptitude') }}" class="btn btn-primary" style="width: 100%;">
+                            Start Assessment <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                    <!-- Card 2: Python Coding Assessment -->
+                    <article class="assessment-card">
+                        <div>
+                            <span class="assessment-card-badge card-badge-python">Python Only</span>
+                            <div class="assessment-card-header">
+                                <span class="eyebrow" style="margin-bottom: 4px;">Technical Assessment</span>
+                                <h3>Python Coding Assessment</h3>
+                            </div>
+                            <p class="assessment-card-desc">
+                                Specialized assessment on Python fundamentals, comprehensions, OOP, debugging, and algorithmic challenges.
+                            </p>
+                            <ul class="assessment-meta-list">
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>15 technical MCQs + 3 coding challenges</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Suggested duration: <strong>45 minutes</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⚙</span>
+                                    <span>Interactive Python editor with test case runner</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">🔒</span>
+                                    <span>Strictly Python questions &amp; Python evaluation</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('assessment.instructions', assessment_type='python_coding') }}" class="btn btn-primary" style="width: 100%;">
+                            Start Assessment <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                    <!-- Card 3: Java Coding Assessment -->
+                    <article class="assessment-card">
+                        <div>
+                            <span class="assessment-card-badge card-badge-java">Java Only</span>
+                            <div class="assessment-card-header">
+                                <span class="eyebrow" style="margin-bottom: 4px;">Technical Assessment</span>
+                                <h3>Java Coding Assessment</h3>
+                            </div>
+                            <p class="assessment-card-desc">
+                                Dedicated Java assessment on JVM memory, String pool, OOP principles, Collections framework, and coding challenges.
+                            </p>
+                            <ul class="assessment-meta-list">
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>15 technical MCQs + 3 coding challenges</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Suggested duration: <strong>45 minutes</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⚙</span>
+                                    <span>Interactive Java editor with javac sandbox compiler</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">🔒</span>
+                                    <span>Strictly Java questions &amp; Java evaluation</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('assessment.instructions', assessment_type='java_coding') }}" class="btn btn-primary" style="width: 100%;">
+                            Start Assessment <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                    <!-- Card 4: Full Career Readiness Assessment -->
+                    <article class="assessment-card card-featured">
+                        <div>
+                            <span class="assessment-card-badge card-badge-full">Comprehensive</span>
+                            <div class="assessment-card-header">
+                                <span class="eyebrow" style="margin-bottom: 4px;">Full Placement Mock</span>
+                                <h3>Full Career Readiness Assessment</h3>
+                            </div>
+                            <p class="assessment-card-desc">
+                                Comprehensive recruitment mock combining general aptitude with your explicitly chosen programming language.
+                            </p>
+                            <ul class="assessment-meta-list">
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>20 Aptitude + 10 Technical + 2 Coding</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Suggested duration: <strong>60 minutes</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⚡</span>
+                                    <span>Select <strong>Python</strong> or <strong>Java</strong> before starting</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">🎯</span>
+                                    <span>Direct connection to Career Recommendation gaps</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('assessment.instructions', assessment_type='full_assessment') }}" class="btn btn-primary" style="width: 100%;">
+                            Select Language &amp; Start <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                </div>
+            </section>
+
+            <!-- ── Assessment History Panel ───────────────────────────── -->
+            <section style="margin-top: 40px;" aria-labelledby="history-heading">
+                <div class="section-title-row">
+                    <h2 id="history-heading" style="font-size: 1.15rem; font-weight: 700;">Previous Assessment Attempts</h2>
+                    <span class="role-label">{{ history | length }} Recorded Attempts</span>
+                </div>
+
+                {% if history %}
+                    <div class="match-list" style="margin-top: 14px;">
+                        {% for attempt in history %}
+                            <article class="match-row" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+                                <div>
+                                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+                                        <h4 style="margin: 0; font-size: 1rem;">
+                                            {% if attempt.assessment_type == 'aptitude' %}Aptitude Assessment
+                                            {% elif attempt.assessment_type == 'python_coding' %}Python Coding Assessment
+                                            {% elif attempt.assessment_type == 'java_coding' %}Java Coding Assessment
+                                            {% else %}Full Career Readiness Assessment ({{ attempt.programming_language | upper }})
+                                            {% endif %}
+                                        </h4>
+                                        {% if attempt.programming_language %}
+                                            <span class="badge badge-{{ attempt.programming_language }}">{{ attempt.programming_language | upper }}</span>
+                                        {% else %}
+                                            <span class="badge badge-aptitude">APTITUDE</span>
+                                        {% endif %}
+
+                                        {% if attempt.readiness_level == 'Strong' %}
+                                            <span class="badge badge-strong">Strong</span>
+                                        {% elif attempt.readiness_level == 'Developing' %}
+                                            <span class="badge badge-developing">Developing</span>
+                                        {% else %}
+                                            <span class="badge badge-improvement">Needs Improvement</span>
+                                        {% endif %}
+                                    </div>
+                                    <p style="font-size: 0.8rem; color: var(--muted); margin: 0;">
+                                        Started: {{ attempt.started_at }} · Target Role: {{ attempt.target_role or 'Software Engineer' }}
+                                    </p>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <div style="text-align: right;">
+                                        <strong style="font-size: 1.15rem; color: var(--teal-deep);">{{ attempt.percentage }}%</strong>
+                                        <small style="display: block; font-size: 0.72rem; color: var(--muted);">{{ attempt.total_score }} / {{ attempt.max_score }} pts</small>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="{{ url_for('assessment.view_result', session_id=attempt.id) }}" class="btn btn-secondary" style="min-height: 34px; padding: 6px 12px; font-size: 0.75rem;">
+                                            Results
+                                        </a>
+                                        <a href="{{ url_for('assessment.review_answers', session_id=attempt.id) }}" class="btn btn-outline" style="min-height: 34px; padding: 6px 12px; font-size: 0.75rem;">
+                                            Review
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="module-empty" style="background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 36px 20px;">
+                        <span style="font-size: 2rem;" aria-hidden="true">📋</span>
+                        <h3 style="margin-top: 10px;">No assessment attempts yet</h3>
+                        <p>Select any assessment option above to begin your personalized placement evaluation.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Footer -->
+            <footer class="dashboard-footer" style="margin-top: 48px;">
+                CareerAI Career Readiness Assessment · Results are guidance for placement preparation, not a hiring decision.
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>

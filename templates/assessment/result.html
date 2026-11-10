@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+
+        <!-- ── Header ──────────────────────────────────────────────── -->
+        <header class="dashboard-header">
+            <div style="display: flex; align-items: center;">
+                <a class="dashboard-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <nav class="dashboard-nav-links" aria-label="Main navigation">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link-item">Career Profile &amp; Match</a>
+                    <a href="{{ url_for('assessment.assessment_home') }}" class="nav-link-item active">Readiness Assessment</a>
+                </nav>
+            </div>
+            <div class="header-account">
+                <span class="account-avatar" aria-hidden="true">{{ username[:1] | upper }}</span>
+                <span class="account-name">{{ username }}</span>
+                <a href="{{ url_for('main.logout') }}" class="header-logout">Log out</a>
+            </div>
+        </header>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <main class="dashboard-main">
+
+            <!-- Breadcrumb / back link -->
+            <div style="margin-bottom: 16px;">
+                <a href="{{ url_for('assessment.assessment_home') }}" class="text-link" style="font-size: 0.85rem; font-weight: 600;">
+                    ← Back to Assessment Hub
+                </a>
+            </div>
+
+            <!-- Page intro -->
+            <section class="page-intro" style="margin-bottom: 20px;">
+                <div>
+                    <p class="eyebrow">Evaluation Outcome &amp; Diagnostics</p>
+                    <h1>Assessment Performance &amp; Skill Diagnostics</h1>
+                    <p class="intro-copy">
+                        Detailed breakdown of your evaluated answers, topic proficiencies, and personalized learning guidance for <strong>{{ session.target_role or 'Software Engineer' }}</strong>.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ── Hero Scorecard ───────────────────────────────────── -->
+            <article class="result-hero-card">
+                <div class="score-circle-display">
+                    <span class="score-circle-number">{{ session.percentage }}%</span>
+                    <span class="score-circle-label">Readiness Score</span>
+                </div>
+
+                <div class="result-hero-content">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        {% if session.programming_language %}
+                            <span class="badge badge-{{ session.programming_language }}">{{ session.programming_language | upper }}</span>
+                        {% else %}
+                            <span class="badge badge-aptitude">APTITUDE</span>
+                        {% endif %}
+
+                        {% if session.readiness_level == 'Strong' %}
+                            <span class="badge badge-strong">Readiness: Strong</span>
+                        {% elif session.readiness_level == 'Developing' %}
+                            <span class="badge badge-developing">Readiness: Developing</span>
+                        {% else %}
+                            <span class="badge badge-improvement">Readiness: Needs Improvement</span>
+                        {% endif %}
+                    </div>
+
+                    <h2>
+                        {% if session.readiness_level == 'Strong' %}
+                            Excellent Performance! You are well-prepared.
+                        {% elif session.readiness_level == 'Developing' %}
+                            Good Foundation with Targeted Improvement Areas.
+                        {% else %}
+                            Key Skill Gaps Identified — Structured Learning Recommended.
+                        {% endif %}
+                    </h2>
+
+                    <p style="font-size: 0.9rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px;">
+                        You scored <strong>{{ session.total_score }}</strong> out of <strong>{{ session.max_score }}</strong> total marks.
+                        This evaluation measures demonstrated competence on recruitment-level topics. It serves as actionable preparation guidance.
+                    </p>
+
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <a href="{{ url_for('assessment.review_answers', session_id=session.id) }}" class="btn btn-primary">
+                            Review Evaluated Answers <span aria-hidden="true">→</span>
+                        </a>
+                        <a href="{{ url_for('assessment.instructions', assessment_type=session.assessment_type, lang=session.programming_language) }}" class="btn btn-secondary">
+                            Retake Assessment
+                        </a>
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">
+                            View Career Matches
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ── Topic-Wise Accuracy Breakdown ────────────────────── -->
+            <section style="margin-top: 36px;" aria-labelledby="breakdown-heading">
+                <div class="section-title-row">
+                    <h2 id="breakdown-heading" style="font-size: 1.15rem; font-weight: 700;">Topic-Wise Accuracy Breakdown</h2>
+                    <span class="role-label">{{ breakdown | length }} Evaluated Topics</span>
+                </div>
+
+                <div class="topic-breakdown-list">
+                    {% for item in breakdown %}
+                        <article class="topic-row">
+                            <div class="topic-row-header">
+                                <div>
+                                    <strong style="color: var(--ink);">{{ item.topic }}</strong>
+                                    <small style="color: var(--muted); margin-left: 8px;">({{ item.correct }} of {{ item.total }} questions correct)</small>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--teal-deep);">{{ item.accuracy }}%</strong>
+                                </div>
+                            </div>
+                            <div class="topic-progress-bar" role="progressbar" aria-valuenow="{{ item.accuracy }}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="topic-progress-fill" style="width: {{ item.accuracy }}%; {% if item.accuracy < 50 %}background: var(--coral);{% elif item.accuracy < 75 %}background: var(--gold);{% endif %}"></div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- ── Skill Gap Analysis & Recommendations ─────────────── -->
+            <section class="skill-gap-recommendations-box">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <h3>Career Readiness Diagnostics &amp; Placement Skill Gaps</h3>
+                    <span class="role-label" style="background: rgba(15, 107, 94, 0.1); color: var(--teal-deep);">
+                        Connected to {{ session.target_role or 'Software Engineer' }}
+                    </span>
+                </div>
+
+                <p style="font-size: 0.88rem; color: var(--ink); margin-top: 6px;">
+                    {{ skill_gaps.career_readiness_advice }}
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
+                    <!-- Demonstrated Strengths -->
+                    <div style="background: var(--surface); padding: 14px 18px; border-radius: var(--r-sm); border: 1px solid var(--line);">
+                        <strong style="font-size: 0.85rem; color: #15803d; display: block; margin-bottom: 8px;">
+                            ✔ Strongest Demonstrated Skills:
+                        </strong>
+                        {% if skill_gaps.demonstrated_strengths %}
+                            <ul style="margin: 0 0 0 18px; font-size: 0.82rem; color: var(--ink-2); line-height: 1.5;">
+                                {% for s in skill_gaps.demonstrated_strengths %}
+                                    <li>{{ s }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p style="font-size: 0.82rem; color: var(--muted);">Continue practicing across core topics to establish clear strengths.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Identified Gaps -->
+                    <div style="background: var(--surface); padding: 14px 18px; border-radius: var(--r-sm); border: 1px solid var(--line);">
+                        <strong style="font-size: 0.85rem; color: var(--coral-deep); display: block; margin-bottom: 8px;">
+                            ⚠ Skills Requiring Immediate Improvement:
+                        </strong>
+                        {% if skill_gaps.identified_lagging_skills %}
+                            <ul style="margin: 0 0 0 18px; font-size: 0.82rem; color: var(--ink-2); line-height: 1.5;">
+                                {% for s in skill_gaps.identified_lagging_skills %}
+                                    <li>{{ s }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p style="font-size: 0.82rem; color: #15803d;">No critical deficits detected in this assessment round.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actionable Learning Recommendations -->
+                <div style="margin-top: 18px;">
+                    <strong style="font-size: 0.88rem; color: var(--teal-deep);">Recommended Next Steps &amp; Learning Activities:</strong>
+                    <ul class="gap-recommendations-list">
+                        {% for rec in skill_gaps.learning_recommendations %}
+                            <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="dashboard-footer" style="margin-top: 48px;">
+                CareerAI Career Readiness Assessment · European Commission ESCO v1.2.0 Integration.
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>

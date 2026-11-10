@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ session_data.assessment_type | replace('_', ' ') | title }} — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+    <script src="{{ url_for('static', filename='js/assessment.js') }}" defer></script>
+</head>
+<body class="dashboard-body" style="background: var(--page);">
+    <div class="dashboard-shell" style="max-width: 1400px; padding: 16px 24px;">
+
+        <!-- ── Active Test Topbar ───────────────────────────────────── -->
+        <header class="test-topbar">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span class="brand-mark" aria-hidden="true" style="width: 28px; height: 28px; font-size: 0.95rem;">C</span>
+                <div>
+                    <h1 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--ink);">
+                        {% if session_data.assessment_type == 'aptitude' %}Aptitude Assessment
+                        {% elif session_data.assessment_type == 'python_coding' %}Python Coding Assessment
+                        {% elif session_data.assessment_type == 'java_coding' %}Java Coding Assessment
+                        {% else %}Full Career Readiness Assessment
+                        {% endif %}
+                    </h1>
+                    <span style="font-size: 0.75rem; color: var(--muted);">Candidate: {{ username }} · Target: {{ session_data.target_role or 'Software Engineer' }}</span>
+                </div>
+                {% if session_data.programming_language %}
+                    <span class="badge badge-{{ session_data.programming_language }}">
+                        {{ session_data.programming_language | upper }}
+                    </span>
+                {% else %}
+                    <span class="badge badge-aptitude">APTITUDE</span>
+                {% endif %}
+            </div>
+
+            <!-- Auto-save status -->
+            <div id="save-status-text" class="save-feedback-text">● Saved</div>
+
+            <!-- Timer & Final Submit -->
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div id="timer-pill" class="timer-pill" title="Time remaining">
+                    <span aria-hidden="true">⏱</span>
+                    <span id="timer-display">--:--</span>
+                </div>
+                <button type="button" id="submit-test-btn" class="btn btn-primary" style="min-height: 38px; padding: 7px 18px;">
+                    Submit Assessment <span aria-hidden="true">✓</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ── Main Test Layout ──────────────────────────────────────── -->
+        <div class="test-layout-shell" 
+             data-session-id="{{ session_id }}" 
+             data-total-questions="{{ total_questions }}" 
+             data-remaining-seconds="{{ remaining_seconds }}">
+
+            <!-- Left: Question Palette Sidebar -->
+            <aside class="palette-sidebar" aria-label="Question Navigator">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <h2 style="font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin: 0;">
+                            Question Palette
+                        </h2>
+                        <span style="font-size: 0.75rem; color: var(--muted);">{{ total_questions }} Total</span>
+                    </div>
+
+                    <div class="palette-grid" role="tablist">
+                        {% for q in questions %}
+                            <button type="button" 
+                                    class="palette-btn {% if loop.first %}btn-active{% endif %} {% if q.is_answered %}btn-answered{% endif %}"
+                                    id="palette-btn-{{ loop.index0 }}"
+                                    data-index="{{ loop.index0 }}"
+                                    aria-label="Question {{ loop.index }}">
+                                {{ loop.index }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="palette-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot dot-answered"></span>
+                        <span>Answered / Saved</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot dot-unanswered"></span>
+                        <span>Unanswered</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot dot-current"></span>
+                        <span>Current Question</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right: Question Canvas -->
+            <main class="question-canvas" id="question-canvas-container">
+
+                {% for q in questions %}
+                    <article class="question-item-card" 
+                             id="question-card-{{ loop.index0 }}"
+                             data-index="{{ loop.index0 }}"
+                             data-question-id="{{ q.id }}"
+                             data-language="{{ session_data.programming_language or 'none' }}"
+                             style="{% if not loop.first %}display: none;{% endif %}">
+
+                        <!-- Question Header -->
+                        <div class="question-header">
+                            <div>
+                                <span class="eyebrow" style="margin-bottom: 2px;">
+                                    Question {{ loop.index }} of {{ total_questions }} · {{ q.subtopic }}
+                                </span>
+                                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                                    <span class="badge" style="background: var(--page); border: 1px solid var(--line); color: var(--ink-2);">
+                                        Difficulty: {{ q.difficulty | capitalize }}
+                                    </span>
+                                    <span class="badge" style="background: var(--teal-mist); color: var(--teal-deep);">
+                                        {{ q.marks }} {% if q.marks > 1 %}Marks{% else %}Mark{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                {% if q.question_type == 'coding_challenge' %}
+                                    <span class="badge badge-{{ session_data.programming_language }}">
+                                        {{ session_data.programming_language | upper }} CODING CHALLENGE
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-aptitude">
+                                        {{ q.question_type | replace('_', ' ') | upper }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Question Body -->
+                        <div class="question-body">
+
+                            <!-- Question Statement -->
+                            <div class="question-text-content">
+                                <p style="white-space: pre-line; margin-bottom: 12px;">{{ q.question_text }}</p>
+                            </div>
+
+                            <!-- Code snippet for technical MCQ if present -->
+                            {% if q.code_snippet and q.question_type != 'coding_challenge' %}
+                                <pre class="question-code-block"><code>{{ q.code_snippet }}</code></pre>
+                            {% endif %}
+
+                            <!-- MCQ Options -->
+                            {% if q.question_type != 'coding_challenge' %}
+                                <div class="mcq-options-container" role="radiogroup" aria-label="Answer options">
+                                    {% for opt in q.options %}
+                                        <label class="mcq-option-label" for="opt-{{ q.id }}-{{ loop.index0 }}">
+                                            <input type="radio" 
+                                                   id="opt-{{ q.id }}-{{ loop.index0 }}" 
+                                                   name="mcq_{{ q.id }}" 
+                                                   value="{{ opt }}"
+                                                   class="mcq-option-radio"
+                                                   {% if q.saved_selected_option == opt %}checked{% endif %}>
+                                            <span><strong>{{ ['A', 'B', 'C', 'D'][loop.index0] }}.</strong> {{ opt }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <!-- Coding Challenge Editor -->
+                                <div class="code-editor-wrapper">
+                                    <div class="code-editor-header">
+                                        <span>Language: {{ session_data.programming_language | upper }} · Solution File</span>
+                                        <span>Tab: 4 spaces</span>
+                                    </div>
+                                    <textarea class="code-textarea" 
+                                              id="editor-{{ q.id }}" 
+                                              placeholder="Write your {{ session_data.programming_language | capitalize }} solution here..."
+                                              spellcheck="false">{{ q.saved_code_submission or q.code_snippet }}</textarea>
+
+                                    <div class="editor-actions-bar">
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">
+                                            Input read via standard input; print output to standard output.
+                                        </span>
+                                        <button type="button" class="btn btn-secondary run-code-btn" style="min-height: 32px; padding: 5px 14px; font-size: 0.75rem;">
+                                            <span aria-hidden="true">▶</span> Run Sample Test
+                                        </button>
+                                    </div>
+
+                                    <div class="code-console-output" id="console-{{ q.id }}">
+                                        Click "Run Sample Test" to compile and test against sample inputs in isolated sandbox.
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    </article>
+                {% endfor %}
+
+                <!-- Footer Navigation Bar -->
+                <div class="question-nav-actions">
+                    <button type="button" id="prev-q-btn" class="btn btn-outline" disabled>
+                        ← Previous
+                    </button>
+                    <span style="font-size: 0.8rem; color: var(--muted);">Answers auto-save in real time</span>
+                    <button type="button" id="next-q-btn" class="btn btn-primary">
+                        Next →
+                    </button>
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- ── Hidden Final Submission Form ────────────────────────────── -->
+    <form id="final-submit-form" action="{{ url_for('assessment.submit_test', session_id=session_id) }}" method="post" style="display: none;">
+    </form>
+
+    <!-- ── Submission Confirmation Modal ──────────────────────────── -->
+    <div id="submit-confirm-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-dialog">
+            <h3 id="modal-title">Confirm Final Submission</h3>
+            <p>
+                Are you sure you want to finish this assessment? Once submitted, your answers will be evaluated and scored.
+            </p>
+
+            <div class="modal-stats-box">
+                <div>
+                    <span style="font-size: 0.75rem; color: var(--muted); display: block;">Answered</span>
+                    <strong id="modal-answered-count" style="font-size: 1.25rem; color: var(--teal-deep);">0</strong>
+                </div>
+                <div>
+                    <span style="font-size: 0.75rem; color: var(--muted); display: block;">Unanswered</span>
+                    <strong id="modal-unanswered-count" style="font-size: 1.25rem; color: var(--coral-deep);">0</strong>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-submit-btn" class="btn btn-outline">Return to Test</button>
+                <button type="button" id="confirm-submit-btn" class="btn btn-primary">Confirm &amp; Submit</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

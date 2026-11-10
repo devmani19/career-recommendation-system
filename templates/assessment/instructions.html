@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Instructions — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+
+        <!-- ── Header ──────────────────────────────────────────────── -->
+        <header class="dashboard-header">
+            <div style="display: flex; align-items: center;">
+                <a class="dashboard-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <nav class="dashboard-nav-links" aria-label="Main navigation">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link-item">Career Profile &amp; Match</a>
+                    <a href="{{ url_for('assessment.assessment_home') }}" class="nav-link-item active">Readiness Assessment</a>
+                </nav>
+            </div>
+            <div class="header-account">
+                <span class="account-avatar" aria-hidden="true">{{ username[:1] | upper }}</span>
+                <span class="account-name">{{ username }}</span>
+                <a href="{{ url_for('main.logout') }}" class="header-logout">Log out</a>
+            </div>
+        </header>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <main class="dashboard-main instructions-shell">
+
+            <div style="margin-bottom: 16px;">
+                <a href="{{ url_for('assessment.assessment_home') }}" class="text-link" style="font-size: 0.85rem; font-weight: 600;">
+                    ← Back to Assessment Options
+                </a>
+            </div>
+
+            <!-- Page intro -->
+            <section class="page-intro" style="margin-bottom: 20px;">
+                <div>
+                    <p class="eyebrow">Review Before Starting</p>
+                    <h1>{{ config.title }}</h1>
+                    <p class="intro-copy">
+                        Please review the instructions, question structure, scoring rules, and language selection before beginning.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Instructions Card & Form -->
+            <article class="instructions-card">
+
+                <form action="{{ url_for('assessment.start_assessment') }}" method="post" id="start-test-form">
+                    <input type="hidden" name="assessment_type" value="{{ assessment_type }}">
+
+                    <!-- Programming Language Selection Section -->
+                    <div class="instruction-section">
+                        <h3>Programming Language Selection</h3>
+                        {% if assessment_type == 'full_assessment' %}
+                            <p class="field-note" style="margin-bottom: 12px;">
+                                The coding section will strictly use only your explicitly chosen programming language. Python and Java questions are never mixed.
+                            </p>
+                            <div class="language-selector-group">
+                                <label class="lang-radio-card" for="lang-python">
+                                    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                        <input type="radio" id="lang-python" name="programming_language" value="python" {% if selected_language == 'python' %}checked{% endif %} required>
+                                        <strong>Python Coding Assessment</strong>
+                                    </div>
+                                    <p>Python fundamentals, debugging, problem-solving, data structures, algorithms, and Python coding challenges.</p>
+                                </label>
+
+                                <label class="lang-radio-card" for="lang-java">
+                                    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                        <input type="radio" id="lang-java" name="programming_language" value="java" {% if selected_language == 'java' %}checked{% endif %} required>
+                                        <strong>Java Coding Assessment</strong>
+                                    </div>
+                                    <p>Java fundamentals, object-oriented programming, collections, problem-solving, algorithms, and Java coding challenges.</p>
+                                </label>
+                            </div>
+                        {% elif assessment_type == 'python_coding' %}
+                            <input type="hidden" name="programming_language" value="python">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="badge badge-python" style="font-size: 0.85rem; padding: 6px 14px;">Python 3.14</span>
+                                <span style="font-size: 0.85rem; color: var(--muted);">Dedicated Python assessment environment (Python questions only).</span>
+                            </div>
+                        {% elif assessment_type == 'java_coding' %}
+                            <input type="hidden" name="programming_language" value="java">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="badge badge-java" style="font-size: 0.85rem; padding: 6px 14px;">Java 26</span>
+                                <span style="font-size: 0.85rem; color: var(--muted);">Dedicated Java assessment environment (Java questions only).</span>
+                            </div>
+                        {% else %}
+                            <span class="badge badge-aptitude" style="font-size: 0.85rem; padding: 6px 14px;">General Aptitude</span>
+                            <span style="font-size: 0.85rem; color: var(--muted); margin-left: 8px;">Standardized placement aptitude testing.</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Target Job Role -->
+                    <div class="instruction-section">
+                        <h3>Target Job Role &amp; Personalization</h3>
+                        <p style="font-size: 0.85rem; color: var(--ink-2); line-height: 1.5;">
+                            Questions will be weighted toward your target position: <strong>{{ target_role }}</strong>.
+                        </p>
+                        <input type="hidden" name="target_role" value="{{ target_role }}">
+                    </div>
+
+                    <!-- Assessment Breakdown -->
+                    <div class="instruction-section">
+                        <h3>Question Counts &amp; Time Limit</h3>
+                        <ul class="assessment-meta-list" style="margin-bottom: 8px;">
+                            {% if assessment_type == 'aptitude' %}
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>20 Aptitude Questions</strong> (Quantitative, Logical, Verbal, DI, Analytical, Patterns)</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Time limit: <strong>30 minutes</strong></span>
+                                </li>
+                            {% elif assessment_type == 'python_coding' %}
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>15 Python Technical Questions</strong> (Multiple choice, code-reading, output prediction)</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>3 Python Coding Challenges</strong> with isolated execution &amp; test cases</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Time limit: <strong>45 minutes</strong></span>
+                                </li>
+                            {% elif assessment_type == 'java_coding' %}
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>15 Java Technical Questions</strong> (Multiple choice, collections, OOP, output prediction)</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>3 Java Coding Challenges</strong> with javac sandbox compiler &amp; test cases</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Time limit: <strong>45 minutes</strong></span>
+                                </li>
+                            {% else %}
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>20 Aptitude Questions</strong></span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>10 Technical Questions</strong> (in selected language)</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">✓</span>
+                                    <span><strong>2 Coding Challenges</strong> (in selected language)</span>
+                                </li>
+                                <li class="assessment-meta-item">
+                                    <span class="assessment-meta-icon">⏱</span>
+                                    <span>Time limit: <strong>60 minutes</strong></span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Rules & Instructions -->
+                    <div class="instruction-section">
+                        <h3>Test Rules &amp; Evaluation Instructions</h3>
+                        <ol class="instruction-rules-list">
+                            <li>The timer starts immediately once you click <strong>Begin Assessment</strong>.</li>
+                            <li>Your answers are automatically saved to your account in real time.</li>
+                            <li>For coding challenges, you can run and test your solution against sample test cases using the <strong>Run Sample Test</strong> button before final submission.</li>
+                            <li>Multiple-choice questions award 1 mark for each correct answer; coding challenges award up to 10 marks with partial credit based on passed test cases.</li>
+                            <li>There is no negative marking. Attempt all questions.</li>
+                            <li>Once submitted, you will receive an in-depth score analysis, career readiness level, identified skill gaps, and a full <strong>Review Answers</strong> walkthrough.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Start Button -->
+                    <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+                        <a href="{{ url_for('assessment.assessment_home') }}" class="btn btn-outline">Cancel</a>
+                        <button type="submit" class="btn btn-primary" style="min-width: 180px;">
+                            Begin Assessment <span aria-hidden="true">→</span>
+                        </button>
+                    </div>
+
+                </form>
+
+            </article>
+
+            <!-- Footer -->
+            <footer class="dashboard-footer" style="margin-top: 40px;">
+                CareerAI Career Readiness Assessment · European ESCO Taxonomy &amp; Industry Placement Standards.
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{
+  "Data Analyst": {
+    "description": "Analyzes datasets, builds reports, and supports evidence-based business decisions.",
+    "skills": ["SQL", "Excel", "Python", "Statistics", "Data Cleaning", "Data Visualization", "Power BI", "Tableau"]
+  },
+  "Business Intelligence Analyst": {
+    "description": "Transforms organizational data into dashboards, metrics, and decision-ready insights.",
+    "skills": ["SQL", "Power BI", "Tableau", "Data Modeling", "Data Visualization", "Excel", "Business Analysis", "Data Warehousing"]
+  },
+  "Data Scientist": {
+    "description": "Uses statistical analysis and machine learning to answer complex questions with data.",
+    "skills": ["Python", "Statistics", "Machine Learning", "SQL", "Pandas", "Data Visualization", "Model Evaluation", "Feature Engineering"]
+  },
+  "Data Engineer": {
+    "description": "Builds reliable data pipelines and platforms that make data available for analysis.",
+    "skills": ["Python", "SQL", "Data Warehousing", "ETL", "Apache Spark", "Cloud Computing", "Data Modeling", "Linux"]
+  },
+  "Machine Learning Engineer": {
+    "description": "Develops, evaluates, and deploys machine-learning models in software systems.",
+    "skills": ["Python", "Machine Learning", "TensorFlow", "PyTorch", "Pandas", "Model Evaluation", "Feature Engineering", "APIs"]
+  },
+  "AI Engineer": {
+    "description": "Integrates artificial-intelligence models and services into user-facing applications.",
+    "skills": ["Python", "Machine Learning", "Natural Language Processing", "Deep Learning", "APIs", "Model Evaluation", "Cloud Computing", "Data Structures"]
+  },
+  "Database Administrator": {
+    "description": "Maintains database availability, performance, security, backup, and recovery.",
+    "skills": ["SQL", "Database Administration", "Database Design", "Linux", "Data Security", "Backup and Recovery", "Cloud Computing", "Performance Tuning"]
+  },
+  "Software Engineer": {
+    "description": "Designs, builds, tests, and maintains software applications and services.",
+    "skills": ["Python", "Java", "Algorithms", "Data Structures", "Git", "APIs", "SQL", "Software Testing"]
+  },
+  "Backend Developer": {
+    "description": "Builds server-side application logic, APIs, and data integrations.",
+    "skills": ["Python", "Java", "APIs", "SQL", "Database Design", "Git", "Linux", "Software Testing"]
+  },
+  "Frontend Developer": {
+    "description": "Creates accessible, responsive interfaces for web applications.",
+    "skills": ["JavaScript", "HTML", "CSS", "Accessibility", "Responsive Design", "Git", "APIs", "User Interface Design"]
+  },
+  "Full-Stack Developer": {
+    "description": "Develops both browser-based interfaces and the server-side services behind them.",
+    "skills": ["JavaScript", "HTML", "CSS", "Python", "APIs", "SQL", "Git", "Responsive Design"]
+  },
+  "Mobile App Developer": {
+    "description": "Builds and maintains applications for mobile operating systems and devices.",
+    "skills": ["Java", "Kotlin", "Swift", "Mobile App Development", "APIs", "Git", "Software Testing", "User Interface Design"]
+  },
+  "QA Engineer": {
+    "description": "Plans and performs software tests to find defects and improve product quality.",
+    "skills": ["Software Testing", "Test Automation", "Python", "Java", "SQL", "Git", "API Testing", "Requirements Analysis"]
+  },
+  "DevOps Engineer": {
+    "description": "Automates software delivery and operates reliable development and production systems.",
+    "skills": ["Linux", "Docker", "Kubernetes", "Cloud Computing", "CI/CD", "Python", "Git", "Monitoring"]
+  },
+  "Cloud Engineer": {
+    "description": "Designs and operates secure, scalable infrastructure on cloud platforms.",
+    "skills": ["AWS", "Azure", "Cloud Computing", "Docker", "Kubernetes", "Linux", "Networking", "Infrastructure as Code"]
+  },
+  "Cybersecurity Analyst": {
+    "description": "Monitors systems, investigates threats, and helps reduce organizational security risks.",
+    "skills": ["Networking", "Cybersecurity", "Linux", "Python", "Threat Analysis", "SIEM", "Incident Response", "Risk Management"]
+  },
+  "Cybersecurity Engineer": {
+    "description": "Designs and implements technical controls that protect systems and information.",
+    "skills": ["Cybersecurity", "Network Security", "Linux", "Cloud Security", "Identity Management", "Python", "Threat Analysis", "Security Testing"]
+  },
+  "Network Engineer": {
+    "description": "Designs, configures, and troubleshoots computer networks and connectivity.",
+    "skills": ["Networking", "Network Security", "Linux", "Cloud Computing", "Troubleshooting", "Monitoring", "Documentation", "Cybersecurity"]
+  },
+  "IT Support Specialist": {
+    "description": "Resolves user and device issues and maintains reliable workplace technology.",
+    "skills": ["Troubleshooting", "Technical Support", "Operating Systems", "Networking", "Cybersecurity", "Documentation", "Communication", "Hardware Support"]
+  },
+  "UX/UI Designer": {
+    "description": "Researches user needs and designs usable, accessible digital product experiences.",
+    "skills": ["Figma", "Wireframing", "User Research", "Prototyping", "User Interface Design", "Accessibility", "Design Systems", "Usability Testing"]
+  },
+  "Product Designer": {
+    "description": "Shapes digital products through user research, interaction design, and prototyping.",
+    "skills": ["Figma", "User Research", "Prototyping", "Wireframing", "Design Systems", "Accessibility", "Usability Testing", "Product Strategy"]
+  },
+  "Business Analyst": {
+    "description": "Turns stakeholder needs into documented requirements and measurable process improvements.",
+    "skills": ["Business Analysis", "SQL", "Documentation", "Communication", "Requirements Analysis", "Excel", "Stakeholder Management", "Data Visualization"]
+  },
+  "Project Manager": {
+    "description": "Coordinates scope, people, timelines, risks, and delivery across projects.",
+    "skills": ["Communication", "Leadership", "Risk Management", "Agile", "Scheduling", "Stakeholder Management", "Documentation", "Project Planning"]
+  },
+  "Product Manager": {
+    "description": "Sets product direction and coordinates delivery around customer and business needs.",
+    "skills": ["Product Strategy", "User Research", "Communication", "Data Analysis", "Stakeholder Management", "Agile", "Requirements Analysis", "Prioritization"]
+  },
+  "Digital Marketing Analyst": {
+    "description": "Measures digital campaign performance and turns audience data into marketing insights.",
+    "skills": ["Data Analysis", "Google Analytics", "SEO", "Excel", "Data Visualization", "A/B Testing", "Communication", "Digital Marketing"]
+  },
+  "Digital Marketing Specialist": {
+    "description": "Plans and manages digital campaigns across search, social, email, and web channels.",
+    "skills": ["Digital Marketing", "SEO", "Content Marketing", "Social Media Marketing", "Google Analytics", "Communication", "Copywriting", "Campaign Management"]
+  },
+  "Financial Analyst": {
+    "description": "Evaluates financial data, forecasts performance, and supports investment or business decisions.",
+    "skills": ["Financial Modeling", "Financial Analysis", "Excel", "Accounting", "Statistics", "Data Visualization", "Forecasting", "Communication"]
+  },
+  "HR Analyst": {
+    "description": "Uses workforce data to inform recruitment, retention, and people operations.",
+    "skills": ["HR Analytics", "Excel", "Data Analysis", "Statistics", "Communication", "Data Visualization", "Human Resources", "Data Privacy"]
+  },
+  "Operations Analyst": {
+    "description": "Analyzes business processes and performance to improve operational efficiency.",
+    "skills": ["Process Improvement", "Data Analysis", "SQL", "Excel", "Statistics", "Business Analysis", "Data Visualization", "Communication"]
+  },
+  "Technical Writer": {
+    "description": "Creates clear technical documentation, guides, and reference materials for users and teams.",
+    "skills": ["Technical Writing", "Documentation", "Communication", "Editing", "APIs", "Information Architecture", "Research", "Git"]
+  },
+  "Research Analyst": {
+    "description": "Collects and analyzes qualitative or quantitative evidence to answer research questions.",
+    "skills": ["Research Methods", "Statistics", "Data Analysis", "Excel", "Python", "Data Visualization", "Critical Thinking", "Technical Writing"]
+  }
+}

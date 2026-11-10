@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Evaluated Answers — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell" style="max-width: 1000px;">
+
+        <!-- ── Header ──────────────────────────────────────────────── -->
+        <header class="dashboard-header">
+            <div style="display: flex; align-items: center;">
+                <a class="dashboard-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <nav class="dashboard-nav-links" aria-label="Main navigation">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link-item">Career Profile &amp; Match</a>
+                    <a href="{{ url_for('assessment.assessment_home') }}" class="nav-link-item active">Readiness Assessment</a>
+                </nav>
+            </div>
+            <div class="header-account">
+                <span class="account-avatar" aria-hidden="true">{{ username[:1] | upper }}</span>
+                <span class="account-name">{{ username }}</span>
+                <a href="{{ url_for('main.logout') }}" class="header-logout">Log out</a>
+            </div>
+        </header>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <main class="dashboard-main">
+
+            <!-- Breadcrumbs -->
+            <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <a href="{{ url_for('assessment.view_result', session_id=session.id) }}" class="text-link" style="font-size: 0.85rem; font-weight: 600;">
+                    ← Back to Result Summary
+                </a>
+                <div style="display: flex; gap: 8px;">
+                    <a href="{{ url_for('assessment.instructions', assessment_type=session.assessment_type, lang=session.programming_language) }}" class="btn btn-primary" style="min-height: 34px; padding: 6px 14px; font-size: 0.8rem;">
+                        Retake Test
+                    </a>
+                </div>
+            </div>
+
+            <!-- Page Intro -->
+            <section class="page-intro" style="margin-bottom: 20px;">
+                <div>
+                    <p class="eyebrow">Answer Keys &amp; Reference Walkthrough</p>
+                    <h1>Review Evaluated Answers</h1>
+                    <p class="intro-copy">
+                        Verify your answers against server-validated answer keys, reference solutions, and explanations.
+                    </p>
+                </div>
+                <div class="intro-note">
+                    Score: <strong>{{ session.total_score }} / {{ session.max_score }}</strong> ({{ session.percentage }}%)
+                </div>
+            </section>
+
+            <!-- ── Questions Review List ────────────────────────────── -->
+            <section aria-label="Question by question review">
+                {% for item in items %}
+                    <article class="review-question-card">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div>
+                                <span class="eyebrow" style="margin-bottom: 2px;">
+                                    Question {{ item.order_index }} · {{ item.subtopic }}
+                                </span>
+                                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                                    <span class="badge" style="background: var(--page); border: 1px solid var(--line); color: var(--ink-2);">
+                                        {{ item.difficulty | capitalize }}
+                                    </span>
+                                    {% if item.is_correct %}
+                                        <span class="badge badge-strong">✔ Correct (+{{ item.score_awarded }} pts)</span>
+                                    {% elif item.score_awarded > 0 %}
+                                        <span class="badge badge-developing">⚠ Partial (+{{ item.score_awarded }} / {{ item.max_score }} pts)</span>
+                                    {% else %}
+                                        <span class="badge badge-improvement">✖ Incorrect (0 / {{ item.max_score }} pts)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div>
+                                {% if item.question_type == 'coding_challenge' %}
+                                    <span class="badge badge-{{ session.programming_language }}">
+                                        {{ session.programming_language | upper }} CODING CHALLENGE
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-aptitude">
+                                        {{ item.question_type | replace('_', ' ') | upper }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Question Statement -->
+                        <div style="font-size: 0.95rem; color: var(--ink); line-height: 1.5; margin-bottom: 14px;">
+                            <p style="white-space: pre-line;">{{ item.question_text }}</p>
+                        </div>
+
+                        {% if item.code_snippet and item.question_type != 'coding_challenge' %}
+                            <pre class="question-code-block"><code>{{ item.code_snippet }}</code></pre>
+                        {% endif %}
+
+                        <!-- Answer Comparison Section -->
+                        {% if item.question_type != 'coding_challenge' %}
+                            <div class="review-answer-grid">
+                                <div class="answer-box {% if item.is_correct %}answer-box-correct{% elif item.user_selected_option %}answer-box-incorrect{% else %}answer-box-user{% endif %}">
+                                    <strong>Your Submitted Answer:</strong>
+                                    <p style="margin-top: 4px; font-weight: 600;">
+                                        {{ item.user_selected_option or 'Unanswered (No answer submitted)' }}
+                                    </p>
+                                </div>
+
+                                <div class="answer-box answer-box-correct">
+                                    <strong>Validated Correct Answer:</strong>
+                                    <p style="margin-top: 4px; font-weight: 600;">
+                                        {{ item.correct_answer }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Coding Challenge Review -->
+                            <div style="margin: 14px 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                                    <strong style="font-size: 0.85rem; color: var(--ink);">Your Submitted Code:</strong>
+                                    <span style="font-size: 0.78rem; color: var(--muted);">
+                                        Test Cases Passed: <strong>{{ item.test_cases_passed }} of {{ item.test_cases_total }}</strong>
+                                    </span>
+                                </div>
+                                <pre class="question-code-block" style="max-height: 220px;"><code>{{ item.user_code_submission or '# No code submitted' }}</code></pre>
+
+                                {% if item.reference_solution %}
+                                    <div style="margin-top: 14px;">
+                                        <strong style="font-size: 0.85rem; color: var(--teal-deep);">Validated {{ session.programming_language | upper }} Reference Solution:</strong>
+                                        <pre class="question-code-block" style="border: 1px solid var(--teal); max-height: 260px;"><code>{{ item.reference_solution }}</code></pre>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Explanation Callout -->
+                        {% if item.explanation %}
+                            <div class="explanation-callout">
+                                <strong>Explanation &amp; Rationale:</strong>
+                                <p style="margin-top: 4px;">{{ item.explanation }}</p>
+                            </div>
+                        {% endif %}
+
+                    </article>
+                {% endfor %}
+            </section>
+
+            <!-- Bottom Action Navigation -->
+            <div style="display: flex; justify-content: space-between; margin-top: 36px;">
+                <a href="{{ url_for('assessment.view_result', session_id=session.id) }}" class="btn btn-outline">
+                    ← Back to Result Summary
+                </a>
+                <a href="{{ url_for('assessment.assessment_home') }}" class="btn btn-primary">
+                    Return to Assessment Hub
+                </a>
+            </div>
+
+            <!-- Footer -->
+            <footer class="dashboard-footer" style="margin-top: 48px;">
+                CareerAI Career Readiness Assessment · Explanations validated for technical recruitment rounds.
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>

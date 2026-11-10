@@ -1,0 +1,35 @@
+<svg width="240" height="180" viewBox="0 0 240 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="curveGrad" x1="0" y1="0" x2="240" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f6b5e" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#168a78" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Flowing trajectory curve -->
+  <path d="M20 150 C 70 140, 90 60, 140 70 C 180 80, 200 30, 220 20" stroke="#0f6b5e" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M20 150 C 70 140, 90 60, 140 70 C 180 80, 200 30, 220 20 L220 170 L20 170 Z" fill="url(#curveGrad)"/>
+
+  <!-- Milestone Nodes -->
+  <circle cx="50" cy="143" r="6" fill="#ffffff" stroke="#0f6b5e" stroke-width="2"/>
+  <circle cx="50" cy="143" r="2.5" fill="#0f6b5e"/>
+  
+  <circle cx="115" cy="65" r="6" fill="#ffffff" stroke="#b38b3e" stroke-width="2"/>
+  <circle cx="115" cy="65" r="2.5" fill="#b38b3e"/>
+
+  <circle cx="170" cy="74" r="6" fill="#ffffff" stroke="#0f6b5e" stroke-width="2"/>
+  <circle cx="170" cy="74" r="2.5" fill="#0f6b5e"/>
+
+  <circle cx="218" cy="22" r="8" fill="#ffffff" stroke="#c4614a" stroke-width="2.5"/>
+  <circle cx="218" cy="22" r="3.5" fill="#c4614a"/>
+
+  <!-- Labels -->
+  <rect x="25" y="112" width="52" height="18" rx="4" fill="#ffffff" stroke="#d5e5df" opacity="0.9"/>
+  <text x="51" y="124" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="8" font-weight="600" fill="#2d4440">Profile</text>
+
+  <rect x="90" y="36" width="54" height="18" rx="4" fill="#ffffff" stroke="#d5e5df" opacity="0.9"/>
+  <text x="117" y="48" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="8" font-weight="600" fill="#2d4440">Skills</text>
+
+  <rect x="180" y="38" width="56" height="18" rx="4" fill="#ffffff" stroke="#ebd5d0" opacity="0.9"/>
+  <text x="208" y="50" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="8" font-weight="700" fill="#c4614a">Career Fit</text>
+</svg>

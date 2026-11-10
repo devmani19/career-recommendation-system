@@ -1,0 +1,21 @@
+SAMPLE HIGH-MATCH RESUME FOR APP TESTING ONLY
+FICTIONAL PERSON - NOT A REAL CANDIDATE
+
+Jordan Sample
+Career target: Data Engineer
+
+EDUCATION
+Bachelor of Data Engineering, 2025
+
+EXPERIENCE
+Data Engineering Trainee, Demo Data Lab
+Supported data engineering tasks and documented work completed in a training environment.
+
+PROJECTS
+Demo Data Warehouse
+Prepared a sample project using the listed data engineering skills.
+
+SKILLS
+analyse pipeline database information; cloud technologies; computer science; create data models; create data sets; data analytics; data models; data storage; data warehouse; database management systems; design database in the cloud; develop data processing applications; digital data processing; establish data processes; implement data warehousing techniques; manage data; manage ICT data architecture; manage quantitative data; manage research data; perform dimensionality reduction; process data; SAS Data Management; statistics; store digital data and systems; Teradata Database; unstructured data; use data processing techniques; use databases
+
+This fictional profile is intentionally aligned to the ESCO Data Engineer skills for testing the recommendation and score display. It is not a real person's resume.

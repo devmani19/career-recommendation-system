@@ -1,0 +1,23 @@
+SAMPLE RESUME FOR APP TESTING ONLY
+NOT A REAL PERSON'S RESUME
+
+Taylor Example
+Email: taylor.example@example.test
+Career goal: Entry-level data analyst
+
+EDUCATION
+Bachelor of Science in Data Analytics, 2025
+Relevant study: statistics, data science, and database systems
+
+EXPERIENCE
+Junior Data Analyst Intern, Demo Insights Lab
+Prepared data reports, cleaned data, checked data quality, and shared visual presentations with a project team.
+
+PROJECTS
+Student Outcomes Dashboard
+Collected and analysed sample data, prepared a data model, and presented the findings in a dashboard.
+
+SKILLS
+analyse big data; apply statistical analysis techniques; business analytics; business intelligence; collect ICT data; data engineering; data ethics; data mining; data models; data quality assessment; data science; data visualisation software
+
+Additional tools: Python, SQL, Excel, and Power BI.

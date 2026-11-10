@@ -1,0 +1,118 @@
+<svg width="1400" height="980" viewBox="0 0 1400 980" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#2c3e50"/>
+    </marker>
+    <style>
+      .title { font: bold 30px Arial, sans-serif; fill: #1f2937; }
+      .box-title { font: bold 20px Arial, sans-serif; fill: #111827; }
+      .text { font: 16px Arial, sans-serif; fill: #1f2937; }
+      .box { fill: #f3f4f6; stroke: #2c3e50; stroke-width: 2; rx: 18; }
+      .box-alt { fill: #e0f2fe; stroke: #2563eb; stroke-width: 2; rx: 18; }
+      .box-green { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; rx: 18; }
+      .box-purple { fill: #f3e8ff; stroke: #9333ea; stroke-width: 2; rx: 18; }
+      .box-yellow { fill: #fef3c7; stroke: #d97706; stroke-width: 2; rx: 18; }
+      .arrow { stroke: #2c3e50; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="700" y="40" text-anchor="middle" class="title">AI-Based Career Recommendation System</text>
+
+  <!-- Student / User -->
+  <rect class="box-alt" x="620" y="80" width="160" height="80"/>
+  <text x="700" y="120" text-anchor="middle" class="box-title">Student / User</text>
+
+  <!-- Frontend -->
+  <rect class="box" x="80" y="220" width="220" height="130"/>
+  <text x="190" y="255" text-anchor="middle" class="box-title">Frontend</text>
+  <text x="190" y="285" text-anchor="middle" class="text">• Login</text>
+  <text x="190" y="307" text-anchor="middle" class="text">• Register</text>
+  <text x="190" y="329" text-anchor="middle" class="text">• Dashboard</text>
+
+  <!-- Backend -->
+  <rect class="box" x="360" y="220" width="220" height="130"/>
+  <text x="470" y="255" text-anchor="middle" class="box-title">Backend</text>
+  <text x="470" y="285" text-anchor="middle" class="text">• Flask Server</text>
+  <text x="470" y="307" text-anchor="middle" class="text">• Authentication</text>
+  <text x="470" y="329" text-anchor="middle" class="text">• Request Handling</text>
+
+  <!-- Validation -->
+  <rect class="box-yellow" x="640" y="220" width="240" height="130"/>
+  <text x="760" y="255" text-anchor="middle" class="box-title">Validation Layer</text>
+  <text x="760" y="285" text-anchor="middle" class="text">• File type check</text>
+  <text x="760" y="307" text-anchor="middle" class="text">• File size check</text>
+  <text x="760" y="329" text-anchor="middle" class="text">• Reject invalid docs</text>
+
+  <!-- Text Extraction -->
+  <rect class="box-green" x="940" y="220" width="220" height="130"/>
+  <text x="1050" y="255" text-anchor="middle" class="box-title">Text Extraction</text>
+  <text x="1050" y="285" text-anchor="middle" class="text">• Resume text</text>
+  <text x="1050" y="307" text-anchor="middle" class="text">• Certificate text</text>
+  <text x="1050" y="329" text-anchor="middle" class="text">• PDF / DOC parsing</text>
+
+  <!-- Skill Extraction -->
+  <rect class="box" x="80" y="430" width="250" height="140"/>
+  <text x="205" y="465" text-anchor="middle" class="box-title">Skill Extraction</text>
+  <text x="205" y="497" text-anchor="middle" class="text">• Keyword detection</text>
+  <text x="205" y="519" text-anchor="middle" class="text">• Skill normalization</text>
+  <text x="205" y="541" text-anchor="middle" class="text">• Match relevant skills</text>
+
+  <!-- Career Dataset -->
+  <rect class="box-purple" x="390" y="430" width="260" height="140"/>
+  <text x="520" y="465" text-anchor="middle" class="box-title">Career Knowledge Base</text>
+  <text x="520" y="497" text-anchor="middle" class="text">• Role names</text>
+  <text x="520" y="519" text-anchor="middle" class="text">• Descriptions</text>
+  <text x="520" y="541" text-anchor="middle" class="text">• Required skills</text>
+
+  <!-- Recommendation Engine -->
+  <rect class="box" x="700" y="430" width="260" height="140"/>
+  <text x="830" y="465" text-anchor="middle" class="box-title">Recommendation Engine</text>
+  <text x="830" y="497" text-anchor="middle" class="text">• Match skills</text>
+  <text x="830" y="519" text-anchor="middle" class="text">• Similarity score</text>
+  <text x="830" y="541" text-anchor="middle" class="text">• Rank career roles</text>
+
+  <!-- Skill Gap Analysis -->
+  <rect class="box-yellow" x="1010" y="430" width="260" height="140"/>
+  <text x="1140" y="465" text-anchor="middle" class="box-title">Skill Gap Analysis</text>
+  <text x="1140" y="497" text-anchor="middle" class="text">• Missing skills</text>
+  <text x="1140" y="519" text-anchor="middle" class="text">• Certification needs</text>
+  <text x="1140" y="541" text-anchor="middle" class="text">• Improvement path</text>
+
+  <!-- Output -->
+  <rect class="box-green" x="540" y="690" width="320" height="150"/>
+  <text x="700" y="725" text-anchor="middle" class="box-title">Output to User</text>
+  <text x="700" y="760" text-anchor="middle" class="text">• Recommended Career</text>
+  <text x="700" y="782" text-anchor="middle" class="text">• Skill Gaps</text>
+  <text x="700" y="804" text-anchor="middle" class="text">• Certification Suggestions</text>
+
+  <!-- Database -->
+  <rect class="box-alt" x="50" y="690" width="260" height="150"/>
+  <text x="180" y="725" text-anchor="middle" class="box-title">SQLite Database</text>
+  <text x="180" y="760" text-anchor="middle" class="text">• User accounts</text>
+  <text x="180" y="782" text-anchor="middle" class="text">• Recommendation history</text>
+  <text x="180" y="804" text-anchor="middle" class="text">• Login records</text>
+
+  <!-- Arrows -->
+  <line class="arrow" x1="700" y1="160" x2="700" y2="220"/>
+
+  <line class="arrow" x1="190" y1="350" x2="190" y2="430"/>
+  <line class="arrow" x1="470" y1="350" x2="470" y2="430"/>
+  <line class="arrow" x1="760" y1="350" x2="760" y2="430"/>
+  <line class="arrow" x1="1050" y1="350" x2="1050" y2="430"/>
+
+  <line class="arrow" x1="205" y1="570" x2="205" y2="690"/>
+  <line class="arrow" x1="520" y1="570" x2="520" y2="690"/>
+  <line class="arrow" x1="830" y1="570" x2="830" y2="690"/>
+  <line class="arrow" x1="1140" y1="570" x2="1140" y2="690"/>
+
+  <line class="arrow" x1="310" y1="750" x2="540" y2="750"/>
+  <line class="arrow" x1="700" y1="690" x2="700" y2="630"/>
+
+  <line class="arrow" x1="300" y1="285" x2="360" y2="285"/>
+  <line class="arrow" x1="580" y1="285" x2="640" y2="285"/>
+  <line class="arrow" x1="880" y1="285" x2="940" y2="285"/>
+
+  <line class="arrow" x1="330" y1="500" x2="390" y2="500"/>
+  <line class="arrow" x1="650" y1="500" x2="700" y2="500"/>
+  <line class="arrow" x1="960" y1="500" x2="1010" y2="500"/>
+</svg>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerAI — AI-Powered Career Recommendations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="site-body">
+    <div class="landing-page">
+        <header class="landing-header">
+            <nav class="nav-bar" aria-label="Main navigation">
+                <a class="brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <div class="nav-actions">
+                    {% if logged_in %}
+                        <a href="{{ url_for('assessment.assessment_home') }}" class="btn btn-outline">Career Assessment</a>
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Open Dashboard</a>
+                        <a href="{{ url_for('main.logout') }}" class="btn btn-outline">Log Out</a>
+                    {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline">Log In</a>
+                        <a href="{{ url_for('main.register') }}" class="btn btn-primary">Get Started <span aria-hidden="true">→</span></a>
+                    {% endif %}
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Hero -->
+            <section class="site-hero" aria-labelledby="hero-heading">
+                <div class="hero-content">
+                    <p class="eyebrow">Career Planning · Skill-Gap Analysis</p>
+                    <h1 id="hero-heading">Turn your skills into a clear career direction.</h1>
+                    <p class="hero-copy">
+                        Upload your resume and certificates to see which career roles match your current skills,
+                        identify what to build next, and get a personalized development plan — instantly.
+                    </p>
+                    <div class="cta-row">
+                        <a href="{{ url_for('main.register') }}" class="btn btn-primary">
+                            Start Your Analysis <span aria-hidden="true">→</span>
+                        </a>
+                        <a href="{{ url_for('main.login') }}" class="text-link">Already registered? Log in</a>
+                    </div>
+
+                    <div class="hero-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-bullet">✓</span>
+                            <span>NLP skill extraction with spaCy</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-bullet">✓</span>
+                            <span>European ESCO taxonomy (v1.2.0)</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-bullet">✓</span>
+                            <span>Cryptographic document verification</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-visual-col">
+                    <div class="hero-illustration-wrapper">
+                        <img 
+                            src="{{ url_for('static', filename='img/hero-illustration.svg') }}" 
+                            alt="Visual overview of CareerAI skill extraction and role matching interface"
+                            class="hero-illustration-img"
+                            loading="eager"
+                        >
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step by Step Process Strip -->
+            <section class="process-strip" aria-label="Step by step process">
+                <div class="process-item-card">
+                    <span class="step-num">01</span>
+                    <div class="step-info">
+                        <strong>Upload Profile &amp; Documents</strong>
+                        <p>Provide your resume and course completion certificates in PDF, DOCX, or TXT formats.</p>
+                    </div>
+                </div>
+                <div class="process-item-card">
+                    <span class="step-num">02</span>
+                    <div class="step-info">
+                        <strong>Intelligent Extraction</strong>
+                        <p>spaCy NLP identifies verified competencies and maps them to standard ESCO skill aliases.</p>
+                    </div>
+                </div>
+                <div class="process-item-card">
+                    <span class="step-num">03</span>
+                    <div class="step-info">
+                        <strong>Ranked Recommendations &amp; Gaps</strong>
+                        <p>Weighted cosine similarity reveals top roles, exact skill matches, and targeted learning steps.</p>
+                    </div>
+                </div>
+                <div class="process-item-card">
+                    <span class="step-num">04</span>
+                    <div class="step-info">
+                        <strong>Career Readiness Assessment</strong>
+                        <p>Company-style aptitude and Python or Java coding assessments identify and bridge remaining skill lag.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature / Module Workflow Grid -->
+            <section class="module-section" aria-labelledby="workflow-heading">
+                <div class="module-section-heading">
+                    <div>
+                        <p class="eyebrow">The Architecture</p>
+                        <h2 id="workflow-heading">From documents to an actionable roadmap.</h2>
+                    </div>
+                    <p>Designed with mathematical rigor, transparent logic, and reliable document parsing.</p>
+                </div>
+                <div class="features">
+                    <article class="feature-box">
+                        <span>01</span>
+                        <h3>Security &amp; Integrity</h3>
+                        <p>Every file is audited for mime-type and SHA-256 hashed for tamper-evident tracking.</p>
+                    </article>
+                    <article class="feature-box">
+                        <span>02</span>
+                        <h3>Resume Insights</h3>
+                        <p>Automatic section labeling for Education, Work Experience, and Technical Projects.</p>
+                    </article>
+                    <article class="feature-box">
+                        <span>03</span>
+                        <h3>Weighted Cosine Scoring</h3>
+                        <p>Evaluates essential skills at full weight and optional skills at half weight for optimal calibration.</p>
+                    </article>
+                    <article class="feature-box">
+                        <span>04</span>
+                        <h3>Curated Course Pathways</h3>
+                        <p>Instant mappings from missing competencies to verified credential programs.</p>
+                    </article>
+                </div>
+
+                <!-- Expandable Architecture Diagram -->
+                <details class="architecture-details">
+                    <summary class="architecture-summary">
+                        <span>
+                            <strong class="arch-heading">System Architecture Diagram</strong>
+                            <small class="arch-sub">Inspect end-to-end data flow from client upload to ESCO recommendation</small>
+                        </span>
+                        <span class="arch-toggle-badge">View Diagram ▾</span>
+                    </summary>
+                    <div class="architecture-preview-box">
+                        <img 
+                            src="{{ url_for('static', filename='img/architecture.svg') }}" 
+                            alt="System Architecture Diagram" 
+                            class="arch-diagram-img"
+                            loading="lazy"
+                        >
+                    </div>
+                </details>
+            </section>
+
+            <footer class="site-footer">
+                CareerAI <span aria-hidden="true">·</span>
+                Certificate file checks do not independently verify the issuing organization.
+                Skill profiles sourced from the European Commission ESCO v1.2.0.
+            </footer>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+    "python.analysis.typeCheckingMode": "standard",
+    "Codegeex.Chat.LanguagePreference": "English",
+    "Codegeex.SidebarUI.LanguagePreference": "English",
+    "Codegeex.RepoIndex": true,
+    "genieai.enableConversationHistory": true,
+    "genieai.promptPrefix.customPrompt1-enabled": true,
+    "python.terminal.useEnvFile": true
+}

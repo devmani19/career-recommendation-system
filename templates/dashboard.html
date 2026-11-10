@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Profile — CareerAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+
+        <!-- ── Header ──────────────────────────────────────────────── -->
+        <header class="dashboard-header">
+            <div style="display: flex; align-items: center;">
+                <a class="dashboard-brand" href="{{ url_for('main.home') }}" aria-label="CareerAI home">
+                    <span class="brand-mark" aria-hidden="true">C</span>
+                    CareerAI
+                </a>
+                <nav class="dashboard-nav-links" aria-label="Main navigation">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link-item active">Career Profile &amp; Match</a>
+                    <a href="{{ url_for('assessment.assessment_home') }}" class="nav-link-item">Readiness Assessment</a>
+                </nav>
+            </div>
+            <div class="header-account">
+                <span class="account-avatar" aria-hidden="true">{{ username[:1] | upper }}</span>
+                <span class="account-name">{{ username }}</span>
+                <a href="{{ url_for('main.logout') }}" class="header-logout">Log out</a>
+            </div>
+        </header>
+
+        <!-- ── Main ──────────────────────────────────────────────────── -->
+        <main class="dashboard-main">
+
+            <!-- Page intro -->
+            <section class="page-intro">
+                <div>
+                    <p class="eyebrow">Career Profile Analysis</p>
+                    <h1>Turn Your Experience Into a Direction.</h1>
+                    <p class="intro-copy">Share your resume and certificates to see career matches, evidence, and the skills to build next.</p>
+                </div>
+                <div class="intro-note">
+                    <span class="note-dot" aria-hidden="true"></span>
+                    Your analysis stays in your account
+                </div>
+            </section>
+
+            {# ── Template helpers ──────────────────────────────────── #}
+            {% set active_module = active_module if active_module is defined and active_module else ('career' if result else 'profile') %}
+            {% if result and result | length > 0 %}{% set top_result = result[0] %}{% endif %}
+
+            {% macro safe_score(value) %}{{ [[value | float(0) | round(1), 0] | max, 100] | min }}{% endmacro %}
+
+            {% macro skill_chips(items, chip_class, extra_class='') %}
+                <div class="skill-list {{ extra_class }}">
+                    {% for skill in items %}
+                        <span class="skill-chip {{ chip_class }}">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% endmacro %}
+
+            {# ── Tab navigation ────────────────────────────────────── #}
+            <nav class="module-tabs" role="tablist" aria-label="Career analysis sections">
+                {% for module, title, subtitle in [
+                    ('profile',    'Profile',               'Upload documents'),
+                    ('resume',     'Resume Insights',       'Skills extracted'),
+                    ('career',     'Career Matches',        'Ranked roles'),
+                    ('gaps',       'Skill Gaps',            'What to build next'),
+                    ('assessment', 'Assessment',            'Placement testing')
+                ] %}
+                    <button
+                        class="module-step"
+                        id="tab-{{ module }}"
+                        type="button"
+                        role="tab"
+                        aria-controls="module-{{ module }}"
+                        aria-selected="{{ 'true' if active_module == module else 'false' }}"
+                        tabindex="{{ '0' if active_module == module else '-1' }}"
+                        data-module-tab="{{ module }}"
+                    >
+                        <span aria-hidden="true">0{{ loop.index }}</span>
+                        <div>
+                            <strong>{{ title }}</strong>
+                            <small>{{ subtitle }}</small>
+                        </div>
+                    </button>
+                {% endfor %}
+            </nav>
+
+            {# ── Panel workspace ───────────────────────────────────── #}
+            <div class="module-workspace" data-active-module="{{ active_module }}">
+
+                {# ── 01 Profile / Upload ──────────────────────────── #}
+                <section
+                    class="module-panel"
+                    id="module-profile"
+                    role="tabpanel"
+                    aria-labelledby="tab-profile"
+                    tabindex="0"
+                    {% if active_module != 'profile' %}hidden{% endif %}
+                >
+                    <div class="module-panel-header">
+                        <div class="panel-heading">
+                            <p class="eyebrow">Your Profile</p>
+                            <h2>Profile &amp; Document Upload</h2>
+                            <h3 class="heading-subpart">Personal Details</h3>
+                        </div>
+                        <p class="module-lede">Create your candidate profile and add the documents used in the analysis.</p>
+                    </div>
+
+                    {% if result %}
+                        <p class="module-complete-note">
+                            Previous analysis complete. Submit updated documents here to run a new analysis.
+                        </p>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        enctype="multipart/form-data"
+                        class="analysis-form"
+                        id="analysis-form"
+                        novalidate
+                    >
+                        <!-- Candidate name -->
+                        <label class="field-label" for="candidate-name">Candidate Name</label>
+                        <input
+                            id="candidate-name"
+                            type="text"
+                            name="candidate_name"
+                            placeholder="e.g. Alex Morgan"
+                            value="{{ candidate_name or '' }}"
+                            required
+                            autocomplete="name"
+                        >
+
+                        <!-- Resume -->
+                        <label class="field-label" for="resume-file">Resume</label>
+                        <label class="upload-control" for="resume-file">
+                            <span class="upload-icon" aria-hidden="true">↥</span>
+                            <span class="upload-copy">
+                                <strong>Choose your resume</strong>
+                                <small>PDF, TXT, or DOCX — up to 20 MB</small>
+                            </span>
+                            <span class="upload-action">Browse</span>
+                            <input
+                                id="resume-file"
+                                type="file"
+                                name="resume"
+                                accept=".pdf,.txt,.docx"
+                                required
+                            >
+                        </label>
+                        <p id="resume-file-name" class="file-selection" aria-live="polite">No resume selected</p>
+
+                        <!-- Certificates -->
+                        <label class="field-label" for="certificate-files">
+                            Certificates
+                            <span class="optional-label">multiple allowed</span>
+                        </label>
+                        <label class="upload-control" for="certificate-files">
+                            <span class="upload-icon certificate-icon" aria-hidden="true">＋</span>
+                            <span class="upload-copy">
+                                <strong>Add certificates or course proof</strong>
+                                <small>PDF, TXT, DOCX, or image files</small>
+                            </span>
+                            <span class="upload-action">Browse</span>
+                            <input
+                                id="certificate-files"
+                                type="file"
+                                name="certificate"
+                                accept=".pdf,.txt,.docx,.jpg,.jpeg,.png"
+                                multiple
+                            >
+                        </label>
+                        <p id="certificate-file-name" class="file-selection" aria-live="polite">No certificates selected</p>
+                        <p class="field-note">Unrelated documents are rejected. Images are not OCR-scanned in this demo.</p>
+
+                        <!-- Extra skills -->
+                        <label class="field-label" for="extra-skills">
+                            Additional Skills
+                            <span class="optional-label">optional</span>
+                        </label>
+                        <input
+                            id="extra-skills"
+                            type="text"
+                            name="skills"
+                            placeholder="e.g. Python, SQL, Figma"
+                        >
+                        <p class="field-note">Separate multiple skills with commas.</p>
+
+                        <!-- Submit -->
+                        <button class="analyze-button" type="submit" id="analyze-btn">
+                            <span class="btn-text">Analyze Career Fit</span>
+                            <span aria-hidden="true">→</span>
+                        </button>
+                    </form>
+
+                    {% if error %}
+                        <div class="alert error" role="alert" style="margin-top: 16px;">{{ error }}</div>
+                    {% endif %}
+
+                    {% if verification %}
+                        <p class="verification-note">
+                            SHA-256 file integrity checked for {{ verification | length }} certificate file(s).
+                            This does not verify issuer authenticity.
+                        </p>
+                    {% endif %}
+                </section>
+
+                {# ── 02 Resume Insights ───────────────────────────── #}
+                <section
+                    class="module-panel"
+                    id="module-resume"
+                    role="tabpanel"
+                    aria-labelledby="tab-resume"
+                    tabindex="0"
+                    {% if active_module != 'resume' %}hidden{% endif %}
+                >
+                    <div class="module-panel-header">
+                        <div class="panel-heading">
+                            <p class="eyebrow">Resume Review</p>
+                            <h2>Resume Processing &amp; Skill Extraction</h2>
+                            <h3 class="heading-subpart">Skills &amp; Resume Sections</h3>
+                        </div>
+                        <p class="module-lede">spaCy phrase matching identifies ESCO skills; labeled sections provide education, experience, and project details.</p>
+                    </div>
+
+                    {% if result %}
+                        <div class="resume-insights">
+                            <h3>
+                                Skills identified
+                                <span class="insight-method">spaCy NLP · ESCO v1.2.0</span>
+                            </h3>
+                            {% if skills %}
+                                {{ skill_chips(skills, 'neutral-chip', 'identified-skills') }}
+                            {% else %}
+                                <p class="muted-copy">No ESCO skills were identified. Add skills in the Profile tab or check the document text.</p>
+                            {% endif %}
+
+                            <div class="profile-sections" style="margin-top: 20px;">
+                                {% for section, title in [('education', 'Education'), ('experience', 'Experience'), ('projects', 'Projects')] %}
+                                    <article class="profile-section">
+                                        <strong>{{ title }}</strong>
+                                        <p>{{ resume_sections[section] if resume_sections and resume_sections[section] else 'No clearly labeled section found in the resume.' }}</p>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="module-empty">
+                            <img src="{{ url_for('static', filename='img/empty-state-docs.svg') }}" alt="Documents illustration" class="empty-state-img">
+                            <h3>Resume insights will appear here</h3>
+                            <p>Complete your profile and run an analysis to view extracted skills and resume sections.</p>
+                            <button type="button" class="module-action" data-open-module="profile">
+                                Go to Profile &amp; Upload <span aria-hidden="true">→</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </section>
+
+                {# ── 03 Career Recommendations ────────────────────── #}
+                <section
+                    class="module-panel"
+                    id="module-career"
+                    role="tabpanel"
+                    aria-labelledby="tab-career"
+                    tabindex="0"
+                    {% if active_module != 'career' %}hidden{% endif %}
+                >
+                    <div class="module-panel-header">
+                        <div class="panel-heading">
+                            <p class="eyebrow">Career Match</p>
+                            <h2>Career Recommendation</h2>
+                            <h3 class="heading-subpart">Ranked Career Matches</h3>
+                        </div>
+                        <p class="module-lede">Career roles are ranked by weighted cosine similarity against ESCO essential and optional skill profiles.</p>
+                    </div>
+
+                    {% if result %}
+                        {% if skill_gap_message %}
+                            <div class="result-notice" role="status">{{ skill_gap_message }}</div>
+                        {% endif %}
+
+                        <!-- Top match card -->
+                        <article class="best-match">
+                            <div class="best-match-copy">
+                                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                                    <p class="eyebrow" style="margin-bottom: 0;">Top Career Match</p>
+                                    <span class="insight-method">
+                                        {% if top_result.ranking_method == 'xgboost' %}
+                                            XGBoost Supervised AI
+                                        {% else %}
+                                            SBERT + Weighted Fallback
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <h3>{{ top_result.role }}</h3>
+                                <p>{{ top_result.description }}</p>
+                                {% if top_result.explanation %}
+                                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--teal-deep); background: var(--teal-soft); padding: 8px 12px; border-radius: var(--r-sm);">
+                                        <strong>AI Fit Assessment:</strong> {{ top_result.explanation }}
+                                    </p>
+                                {% endif %}
+                                {% if top_result.score_components %}
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 0.8rem;">
+                                        <span class="skill-chip neutral-chip">Semantic Sim: {{ (top_result.score_components.semantic_similarity * 100) | round(1) }}%</span>
+                                        <span class="skill-chip neutral-chip">Skill Coverage: {{ (top_result.score_components.skill_coverage * 100) | round(1) }}%</span>
+                                        <span class="skill-chip neutral-chip">Qualification: {{ (top_result.score_components.qualification_fit * 100) | round(1) }}%</span>
+                                        <span class="skill-chip neutral-chip">Experience: {{ (top_result.score_components.experience_fit * 100) | round(1) }}%</span>
+                                        <span class="skill-chip neutral-chip">Credential: {{ (top_result.score_components.credential_confidence * 100) | round(1) }}%</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="score-display">
+                                <strong>{{ safe_score(top_result.score) }}<span>%</span></strong>
+                                <small>match score</small>
+                            </div>
+                            <div class="score-track" role="progressbar" aria-valuenow="{{ safe_score(top_result.score) }}" aria-valuemin="0" aria-valuemax="100">
+                                <span style="width: {{ safe_score(top_result.score) }}%"></span>
+                            </div>
+                            <p class="score-explanation">A higher score reflects greater multi-feature alignment across skills, semantics, and credentials.</p>
+                        </article>
+
+                        <!-- All matches -->
+                        <div class="match-list" aria-label="All career matches">
+                            {% for item in result %}
+                                <article class="match-row">
+                                    <div class="match-row-title">
+                                        <h4>{{ item.role }}</h4>
+                                        <p>{{ item.description }}</p>
+                                        {% if item.explanation and loop.index > 1 %}
+                                            <p style="margin-top: 4px; font-size: 0.85rem; color: var(--muted);">{{ item.explanation }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="match-meter">
+                                        <div role="progressbar" aria-valuenow="{{ safe_score(item.score) }}" aria-valuemin="0" aria-valuemax="100">
+                                            <span style="width: {{ safe_score(item.score) }}%"></span>
+                                        </div>
+                                        <strong>{{ safe_score(item.score) }}%</strong>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if skill_gap_message %}
+                            <div class="result-notice" role="status">{{ skill_gap_message }}</div>
+                        {% endif %}
+                        <div class="module-empty">
+                            <img src="{{ url_for('static', filename='img/empty-state-docs.svg') }}" alt="Documents illustration" class="empty-state-img">
+                            <h3>Career matches appear after analysis</h3>
+                            <p>The system compares your extracted skills with ESCO occupation profiles and sorts matching roles by score.</p>
+                            <button type="button" class="module-action" data-open-module="profile">
+                                Start an Analysis <span aria-hidden="true">→</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </section>
+
+                {# ── 04 Skill Gaps ────────────────────────────────── #}
+                <section
+                    class="module-panel"
+                    id="module-gaps"
+                    role="tabpanel"
+                    aria-labelledby="tab-gaps"
+                    tabindex="0"
+                    {% if active_module != 'gaps' %}hidden{% endif %}
+                >
+                    <div class="module-panel-header">
+                        <div class="panel-heading">
+                            <p class="eyebrow">Skill Development</p>
+                            <h2>Skill-Gap Analysis</h2>
+                            <h3 class="heading-subpart">Matched Skills &amp; Skills to Build</h3>
+                        </div>
+                        <p class="module-lede">Compare your evidence with the essential skills for your strongest career match.</p>
+                    </div>
+
+                    {% if result %}
+                        <div class="section-title-row">
+                            <h3>{{ top_result.role }}</h3>
+                            <span class="role-label">Top match · {{ safe_score(top_result.score) }}%</span>
+                        </div>
+
+                        <div class="skill-columns">
+                            <div class="skill-column matched-column">
+                                <h4>
+                                    Skills you have
+                                    <span>{{ top_result.match | length }}</span>
+                                </h4>
+                                {% if top_result.match %}
+                                    {{ skill_chips(top_result.match, 'matched-chip') }}
+                                {% else %}
+                                    <p class="muted-copy">No direct matched skills found.</p>
+                                {% endif %}
+                            </div>
+                            <div class="skill-column missing-column">
+                                <h4>
+                                    Essential skills to build
+                                    <span>{{ top_result.all_missing | length }}</span>
+                                </h4>
+                                {% if top_result.all_missing %}
+                                    {{ skill_chips(top_result.all_missing, 'missing-chip') }}
+                                {% else %}
+                                    <p class="muted-copy">You match all listed essential skills for this role.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if top_result.optional_missing %}
+                            <p class="optional-skills-note">
+                                <strong>Related optional skills:</strong>
+                                {{ top_result.optional_missing | join(', ') }}
+                            </p>
+                        {% endif %}
+
+                        <div class="certification-row">
+                            <span class="cert-icon" aria-hidden="true">↗</span>
+                            <div>
+                                <strong>Suggested next learning</strong>
+                                <p>
+                                    {{ top_result.certifications | join(', ') if top_result.certifications else 'Build experience through a practical project or portfolio.' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p class="verification-note">
+                            Skill profiles: European Commission ESCO v1.2.0. Suggestions are guidance, not a hiring decision.
+                        </p>
+                    {% else %}
+                        <div class="module-empty">
+                            <img src="{{ url_for('static', filename='img/empty-state-docs.svg') }}" alt="Documents illustration" class="empty-state-img">
+                            <h3>Your skill gaps will appear here</h3>
+                            <p>After analysis, this view separates skills you have from essential skills to build.</p>
+                            <button type="button" class="module-action" data-open-module="profile">
+                                Start an Analysis <span aria-hidden="true">→</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </section>
+
+                {# ── 05 Career Readiness Assessment Panel ────────── #}
+                <section
+                    class="module-panel"
+                    id="module-assessment"
+                    role="tabpanel"
+                    aria-labelledby="tab-assessment"
+                    tabindex="0"
+                    {% if active_module != 'assessment' %}hidden{% endif %}
+                >
+                    <div class="module-panel-header">
+                        <div class="panel-heading">
+                            <p class="eyebrow">Placement Evaluation</p>
+                            <h2>Career Readiness Assessment</h2>
+                            <h3 class="heading-subpart">Aptitude &amp; Programming Tests</h3>
+                        </div>
+                        <p class="module-lede">
+                            Evaluate your aptitude and programming skills, identify your weaknesses, and discover the areas you need to improve for your target career.
+                        </p>
+                    </div>
+
+                    <div class="assessment-cards-grid" style="margin-top: 10px;">
+                        <article class="assessment-card">
+                            <div>
+                                <span class="assessment-card-badge">Aptitude</span>
+                                <div class="assessment-card-header">
+                                    <span class="eyebrow" style="margin-bottom: 4px;">General Placement</span>
+                                    <h3>Aptitude Assessment</h3>
+                                </div>
+                                <p class="assessment-card-desc">Numerical ability, logical deductions, data interpretation, verbal reasoning, and problem-solving patterns.</p>
+                                <ul class="assessment-meta-list">
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">✓</span><span>20 aptitude questions per attempt</span></li>
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">⏱</span><span>Suggested duration: 30 minutes</span></li>
+                                </ul>
+                            </div>
+                            <a href="{{ url_for('assessment.instructions', assessment_type='aptitude') }}" class="btn btn-primary" style="width: 100%;">
+                                Start Assessment <span aria-hidden="true">→</span>
+                            </a>
+                        </article>
+
+                        <article class="assessment-card">
+                            <div>
+                                <span class="assessment-card-badge card-badge-python">Python Only</span>
+                                <div class="assessment-card-header">
+                                    <span class="eyebrow" style="margin-bottom: 4px;">Technical Assessment</span>
+                                    <h3>Python Coding Assessment</h3>
+                                </div>
+                                <p class="assessment-card-desc">Python fundamentals, comprehensions, OOP, debugging, and algorithmic coding challenges.</p>
+                                <ul class="assessment-meta-list">
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">✓</span><span>15 technical MCQs + 3 coding challenges</span></li>
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">⏱</span><span>Suggested duration: 45 minutes</span></li>
+                                </ul>
+                            </div>
+                            <a href="{{ url_for('assessment.instructions', assessment_type='python_coding') }}" class="btn btn-primary" style="width: 100%;">
+                                Start Assessment <span aria-hidden="true">→</span>
+                            </a>
+                        </article>
+
+                        <article class="assessment-card">
+                            <div>
+                                <span class="assessment-card-badge card-badge-java">Java Only</span>
+                                <div class="assessment-card-header">
+                                    <span class="eyebrow" style="margin-bottom: 4px;">Technical Assessment</span>
+                                    <h3>Java Coding Assessment</h3>
+                                </div>
+                                <p class="assessment-card-desc">Java fundamentals, OOP, Collections, JVM memory, and Java algorithmic challenges.</p>
+                                <ul class="assessment-meta-list">
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">✓</span><span>15 technical MCQs + 3 coding challenges</span></li>
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">⏱</span><span>Suggested duration: 45 minutes</span></li>
+                                </ul>
+                            </div>
+                            <a href="{{ url_for('assessment.instructions', assessment_type='java_coding') }}" class="btn btn-primary" style="width: 100%;">
+                                Start Assessment <span aria-hidden="true">→</span>
+                            </a>
+                        </article>
+
+                        <article class="assessment-card card-featured">
+                            <div>
+                                <span class="assessment-card-badge card-badge-full">Comprehensive</span>
+                                <div class="assessment-card-header">
+                                    <span class="eyebrow" style="margin-bottom: 4px;">Full Placement Mock</span>
+                                    <h3>Full Career Readiness Assessment</h3>
+                                </div>
+                                <p class="assessment-card-desc">Aptitude + technical in your chosen language (Python or Java) with career gap analysis.</p>
+                                <ul class="assessment-meta-list">
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">✓</span><span>20 Aptitude + 10 Technical + 2 Coding</span></li>
+                                    <li class="assessment-meta-item"><span class="assessment-meta-icon">⏱</span><span>Suggested duration: 60 minutes</span></li>
+                                </ul>
+                            </div>
+                            <a href="{{ url_for('assessment.instructions', assessment_type='full_assessment') }}" class="btn btn-primary" style="width: 100%;">
+                                Select Language &amp; Start <span aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    </div>
+
+                    <div style="margin-top: 24px; text-align: center;">
+                        <a href="{{ url_for('assessment.assessment_home') }}" class="btn btn-secondary">
+                            Open Full Assessment Hub &amp; History <span aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </section>
+
+            </div>{# end .module-workspace #}
+
+            <!-- ── History ──────────────────────────────────────────── -->
+            {% if history %}
+                <details class="history-panel">
+                    <summary class="history-summary">
+                        <span>
+                            <small>Your Account</small>
+                            <strong>Recent Analyses</strong>
+                        </span>
+                        <span class="history-count">{{ history | length }} saved</span>
+                        <span class="disclosure-chevron" aria-hidden="true">＋</span>
+                    </summary>
+                    <div class="history-list">
+                        {% for item in history[:6] %}
+                            <article class="history-entry">
+                                <div>
+                                    <strong>{{ item.candidate_name }}</strong>
+                                    <small>{{ item.certificate_name }}</small>
+                                </div>
+                                <time>{{ item.created_at }}</time>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% endif %}
+
+            <footer class="dashboard-footer">
+                CareerAI <span aria-hidden="true">·</span>
+                Career recommendations are guidance, not a hiring decision.
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>

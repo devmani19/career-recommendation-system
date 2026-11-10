@@ -1,0 +1,11 @@
+{
+  "dataset": "European Skills, Competences, Qualifications and Occupations (ESCO)",
+  "version": "v1.2.0",
+  "language": "en",
+  "source": "https://ec.europa.eu/esco/api",
+  "documentation": "https://esco.ec.europa.eu/en/use-esco/use-esco-services-api/esco-web-service-api",
+  "imported_at_utc": "2026-10-04T04:25:33.080005+00:00",
+  "occupation_profiles": 19,
+  "source_skill_relationships": "hasEssentialSkill and hasOptionalSkill",
+  "unique_skill_concepts": 681
+}

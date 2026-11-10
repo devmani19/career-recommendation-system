@@ -1,0 +1,43 @@
+<svg width="180" height="140" viewBox="0 0 180 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="180" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f0f7f5"/>
+      <stop offset="100%" stop-color="#e2f0ec"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Subtle circular pedestal -->
+  <ellipse cx="90" cy="115" rx="65" ry="14" fill="#e4eee9"/>
+  <ellipse cx="90" cy="113" rx="50" ry="10" fill="#dae7e2"/>
+
+  <!-- Back document (certificate) -->
+  <g transform="translate(48, 22) rotate(-8)">
+    <rect width="68" height="86" rx="6" fill="#ffffff" stroke="#cdded7" stroke-width="1.5"/>
+    <rect x="10" y="14" width="48" height="6" rx="3" fill="#e4f2ef"/>
+    <rect x="10" y="26" width="36" height="4" rx="2" fill="#edf4f1"/>
+    <rect x="10" y="34" width="42" height="4" rx="2" fill="#edf4f1"/>
+    <circle cx="48" cy="62" r="8" fill="#f7ece9" stroke="#de7861" stroke-width="1"/>
+  </g>
+
+  <!-- Front document (resume) -->
+  <g transform="translate(68, 26) rotate(6)">
+    <rect width="70" height="90" rx="6" fill="#ffffff" stroke="#b8d4c9" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="7" fill="#0f6b5e"/>
+    <rect x="33" y="15" width="28" height="5" rx="2.5" fill="#2d4440"/>
+    <rect x="33" y="23" width="20" height="4" rx="2" fill="#93a8a3"/>
+    
+    <line x1="12" y1="36" x2="58" y2="36" stroke="#edf3f0" stroke-width="1.5"/>
+    <rect x="12" y="44" width="46" height="4" rx="2" fill="#e4f2ef"/>
+    <rect x="12" y="52" width="40" height="4" rx="2" fill="#edf4f1"/>
+    <rect x="12" y="60" width="44" height="4" rx="2" fill="#edf4f1"/>
+
+    <!-- Small skill tag icon -->
+    <rect x="12" y="72" width="22" height="9" rx="3" fill="#e4f2ef"/>
+    <rect x="38" y="72" width="20" height="9" rx="3" fill="#e4f2ef"/>
+  </g>
+
+  <!-- Floating Sparkles / Minimal Badges -->
+  <circle cx="36" cy="46" r="3" fill="#b38b3e" opacity="0.8"/>
+  <circle cx="152" cy="38" r="4" fill="#0f6b5e" opacity="0.6"/>
+  <path d="M142 84L144 89L149 91L144 93L142 98L140 93L135 91L140 89Z" fill="#c4614a" opacity="0.7"/>
+</svg>
